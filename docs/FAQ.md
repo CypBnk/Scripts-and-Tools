@@ -32,7 +32,7 @@ This project supports Windows, macOS, and Linux. Platform-specific instructions 
 
 ### Where can I find usage examples?
 
-Check the [README.md](../README.md) for basic examples and the [API Documentation](API.md) for detailed reference.
+Check the [README.md](../README.md) and script-specific help output.
 
 ### How do I find stale Entra devices and exclude Autopilot devices?
 
@@ -49,6 +49,18 @@ Optional CSV export:
 ```powershell
 .\src\Powershell\Get-StaleDevices.ps1 -MinDays 90 -MaxDays 365 -CsvPath .\stale-devices.csv
 ```
+
+### How do I run the interactive Entra cleanup workflow?
+
+Use `src/Powershell/Invoke-EntraDeviceCleanup.ps1`.
+
+Example:
+
+```powershell
+.\src\Powershell\Invoke-EntraDeviceCleanup.ps1
+```
+
+The script guides you through authentication, listing, filtering (including a custom threshold), and optional deletion in read+write mode.
 
 ### How do I report a bug?
 

@@ -75,6 +75,25 @@ function Show-Banner {
     Write-Host ''
 }
 
+function Show-StepOverview {
+    param([int]$PermLevel)
+
+    Write-Host '  Steps in this session:' -ForegroundColor Cyan
+    Write-Host ''
+    Write-Host '  Step 0  Authentication     [Read-Only / Read+Write]' -ForegroundColor White
+    Write-Host '  Step 1  List devices       [Read-Only]              — Query all Entra devices' -ForegroundColor White
+    Write-Host '  Step 2  Filter             [Read-Only]              — Apply staleness threshold' -ForegroundColor White
+
+    if ($PermLevel -eq 2) {
+        Write-Host '  Step 3  Delete             [Read+Write] ⚠          — Remove stale non-Autopilot devices' -ForegroundColor Yellow
+    }
+    else {
+        Write-Host '  Step 3  Delete             [Skipped — Read-Only session]' -ForegroundColor DarkGray
+    }
+
+    Write-Host ''
+}
+
 function Show-StepHeader {
     param(
         [int]$StepNumber,
@@ -129,7 +148,6 @@ function Get-AllGraphPages {
     while ($nextLink) {
         $response = $null
         $attempt = 0
-
         while ($attempt -lt $MaxRetries) {
             try {
                 $response = Invoke-MgGraphRequest -Method GET -Uri $nextLink
@@ -140,25 +158,19 @@ function Get-AllGraphPages {
                 $msg = [string]$_.Exception.Message
                 $retriable = $msg -match 'HTTP/\d+(\.\d+)?\s+(429|5\d\d)' -or
                 $msg -match 'Too Many Requests|Internal Server Error|temporar'
-
                 if (-not $retriable -or $attempt -ge $MaxRetries) { throw }
-
                 $delay = [Math]::Min(15, [int][Math]::Pow(2, $attempt))
                 Write-Host ("    Retrying in {0}s..." -f $delay) -ForegroundColor DarkYellow
                 Start-Sleep -Seconds $delay
             }
         }
-
-        if ($response.PSObject.Properties.Name -contains 'value' -and $response.value) {
-            foreach ($item in $response.value) { $items.Add($item) }
+        $valueItems = Get-PropValue -Obj $response -Name 'value'
+        if ($null -ne $valueItems) {
+            foreach ($item in @($valueItems)) { $items.Add($item) }
         }
-
-        $nextLink = if ($response.PSObject.Properties.Name -contains '@odata.nextLink') {
-            [string]$response.'@odata.nextLink'
-        }
-        else { $null }
+        $rawNextLink = [string](Get-PropValue -Obj $response -Name '@odata.nextLink')
+        $nextLink = if ([string]::IsNullOrEmpty($rawNextLink)) { $null } else { $rawNextLink }
     }
-
     return , $items
 }
 
@@ -171,11 +183,13 @@ function Get-PropValue {
     if ($null -eq $Obj) { return $null }
 
     if ($Obj -is [System.Collections.IDictionary]) {
-        return if ($Obj.Contains($Name)) { $Obj[$Name] } else { $null }
+        if ($Obj.Contains($Name)) { return $Obj[$Name] }
+        return $null
     }
 
     $prop = $Obj.PSObject.Properties.Match($Name) | Select-Object -First 1
-    return if ($prop) { $prop.Value } else { $null }
+    if ($prop) { return $prop.Value }
+    return $null
 }
 
 function Test-HasZtdId {
@@ -192,20 +206,15 @@ function Test-HasZtdId {
 # ─── Step 0: Authentication ───────────────────────────────────────────────────
 
 function Invoke-Step0 {
+    param([int]$PermLevel)
+
     Show-StepHeader -StepNumber 0 -Title 'Authentication'
     Write-Log -Step 0 -Message 'Authentication step started'
 
     $scopesRead = @('Device.Read.All', 'DeviceManagementServiceConfig.Read.All')
     $scopesWrite = @('Device.Read.All', 'Device.ReadWrite.All', 'DeviceManagementServiceConfig.Read.All')
 
-    # ── Permission level ──────────────────────────────────────────────────────
-    Write-Host '  What do you want to do in this session?' -ForegroundColor Cyan
-    $permChoice = Read-MenuChoice -Options @(
-        'Read-only   — list and filter devices (no deletion)'
-        'Read+Write  — list, filter and delete stale devices'
-    ) -Prompt 'Permission level'
-
-    $scopes = if ($permChoice -eq 1) { $scopesRead } else { $scopesWrite }
+    $scopes = if ($PermLevel -eq 1) { $scopesRead } else { $scopesWrite }
 
     # ── Auth method ───────────────────────────────────────────────────────────
     Write-Host '  Select sign-in method:' -ForegroundColor Cyan
@@ -260,12 +269,12 @@ function Invoke-Step0 {
     Write-Host ('  Scopes       : {0}' -f ($ctx.Scopes -join ', ')) -ForegroundColor Green
 
     Write-Log -Step 0 -Message ('Authenticated. Account={0} TenantId={1} Scopes={2}' -f $(if ($ctx.Account) { $ctx.Account } else { $ctx.ClientId }), $ctx.TenantId, ($ctx.Scopes -join ','))
-    Write-Log -Step 0 -Message ('Permission level: {0}' -f $(if ($permChoice -eq 1) { 'Read-only' } else { 'Read+Write' }))
+    Write-Log -Step 0 -Message ('Permission level: {0}' -f $(if ($PermLevel -eq 1) { 'Read-only' } else { 'Read+Write' }))
 
     $logFile = Join-Path $script:LogDir ('{0}_Step0.log' -f $script:SessionTs)
     Write-Host ('  Log: {0}' -f $logFile) -ForegroundColor DarkGray
 
-    return $permChoice
+    return
 }
 
 # ─── Step 1: List all devices ─────────────────────────────────────────────────
@@ -374,7 +383,7 @@ function Invoke-Step1 {
     Write-Host ('  Log: {0}' -f $logFile) -ForegroundColor DarkGray
 
     # Filter out any $null entries that result from an empty foreach
-    return , @($enriched | Where-Object { $null -ne $_ })
+    return @($enriched | Where-Object { $null -ne $_ })
 }
 
 # ─── Step 2: Filter by staleness threshold ────────────────────────────────────
@@ -389,9 +398,24 @@ function Invoke-Step2 {
         ' 30 days  — aggressive   (recently inactive only)'
         ' 90 days  — recommended'
         '365 days  — conservative (one year or more inactive)'
+        'Custom    — enter any number of days'
     ) -Prompt 'Threshold'
 
-    $threshold = @(30, 90, 365)[$threshChoice - 1]
+    if ($threshChoice -eq 4) {
+        $customDays = $null
+        do {
+            $raw = Read-Host '  Enter custom threshold (days)'
+            $customDays = $raw -as [int]
+            if ($null -eq $customDays -or $customDays -lt 1) {
+                Write-Host '  Please enter a positive integer.' -ForegroundColor Yellow
+                $customDays = $null
+            }
+        } while ($null -eq $customDays)
+        $threshold = $customDays
+    }
+    else {
+        $threshold = @(30, 90, 365)[$threshChoice - 1]
+    }
     Write-Log -Step 2 -Message ('Threshold selected: {0} days' -f $threshold)
 
     # Devices with DaysSince = 9999 (no sign-in recorded) are listed separately
@@ -514,8 +538,20 @@ if (-not (Get-Command -Name Invoke-MgGraphRequest -ErrorAction SilentlyContinue)
 $null = [System.IO.Directory]::CreateDirectory($script:LogDir)
 Write-Log -Step 0 -Message ('Session started. LogDir={0}' -f $script:LogDir)
 
+# ── Choose execution mode upfront ─────────────────────────────────────────────
+Write-Host '  What do you want to do in this session?' -ForegroundColor Cyan
+$permLevel = Read-MenuChoice -Options @(
+    'Read-only   — list and filter devices (no deletion)'
+    'Read+Write  — list, filter and delete stale devices'
+) -Prompt 'Execution mode'
+
+Write-Log -Step 0 -Message ('Execution mode selected: {0}' -f $(if ($permLevel -eq 1) { 'Read-only' } else { 'Read+Write' }))
+
+# ── Show step overview based on chosen mode ───────────────────────────────────
+Show-StepOverview -PermLevel $permLevel
+
 # Step 0 — Auth
-$permLevel = Invoke-Step0
+Invoke-Step0 -PermLevel $permLevel
 
 # Step 1 — List
 Wait-Continue -Message 'Press ENTER to continue to Step 1: List Devices'
@@ -545,7 +581,7 @@ if ($permLevel -eq 2) {
 }
 else {
     Write-Host ''
-    Write-Host '  Step 3 skipped — session is read-only (selected at Step 0).' -ForegroundColor DarkGray
+    Write-Host '  Step 3 skipped — session is read-only.' -ForegroundColor DarkGray
     Write-Log -Step 3 -Message 'Step 3 skipped — read-only session.'
 }
 

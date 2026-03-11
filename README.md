@@ -17,10 +17,10 @@ This repository contains a curated collection of scripts for system administrati
 
 ```
 .
-├── Powershell/          # PowerShell scripts for Windows administration
-├── Python/              # Python utilities and data processing scripts
-├── Shell_BASH/          # Bash/Shell scripts for Unix/Linux systems
-├── JS/                  # JavaScript and Node.js scripts
+├── src/
+│   ├── Powershell/      # PowerShell scripts for Windows administration
+│   └── Python/          # Python utilities and data processing scripts
+├── tests/               # Automated tests
 └── docs/                # Documentation
 ```
 
@@ -34,26 +34,24 @@ Each script type has different requirements. See the [Installation Guide](docs/I
 
 ```powershell
 # Run a PowerShell script
-.\Powershell\script-name.ps1
+.\src\Powershell\script-name.ps1
 ```
 
 **Python:**
 
 ```bash
-python Python/script_name.py
+python src/Python/script_name.py
 ```
 
-**Bash/Shell:**
+### Entra Device Cleanup Workflow
 
-```bash
-bash Shell_BASH/script-name.sh
+Use the interactive Entra cleanup script to authenticate, list devices, apply stale-device filters, and optionally delete non-Autopilot stale devices.
+
+```powershell
+.\src\Powershell\Invoke-EntraDeviceCleanup.ps1
 ```
 
-**JavaScript:**
-
-```bash
-node JS/script-name.js
-```
+The filter step supports predefined thresholds (30/90/365 days) and a custom day threshold.
 
 ## Requirements
 
@@ -68,15 +66,10 @@ node JS/script-name.js
 - Python 3.8 or higher
 - pip package manager
 
-**Bash/Shell:**
+Notes:
 
-- Linux/Unix/macOS
-- Bash 4.0 or higher
-
-**JavaScript:**
-
-- Node.js 12.0 or higher
-- npm or yarn
+- Microsoft Graph PowerShell SDK is required for Entra/Intune PowerShell scripts.
+- Required delegated scopes depend on execution mode (read-only or read+write).
 
 ## Contributing
 

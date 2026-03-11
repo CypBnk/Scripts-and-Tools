@@ -39,6 +39,11 @@ The `src/Powershell/Get-StaleDevices.ps1` script requires Microsoft Graph delega
 
 When prompted during `Connect-MgGraph`, grant consent for these scopes.
 
+The `src/Powershell/Invoke-EntraDeviceCleanup.ps1` script uses:
+
+- Read-only mode: `Device.Read.All`, `DeviceManagementServiceConfig.Read.All`
+- Read+write mode: `Device.Read.All`, `Device.ReadWrite.All`, `DeviceManagementServiceConfig.Read.All`
+
 ### Python Setup
 
 ```bash
@@ -87,43 +92,23 @@ chmod +x Shell_BASH/*.sh
 
 ```powershell
 # Execute a PowerShell script
-.\Powershell\script-name.ps1
+.\src\Powershell\script-name.ps1
 
 # With parameters
-.\Powershell\script-name.ps1 -Param1 "value1" -Param2 "value2"
+.\src\Powershell\script-name.ps1 -Param1 "value1" -Param2 "value2"
+
+# Interactive Entra cleanup workflow
+.\src\Powershell\Invoke-EntraDeviceCleanup.ps1
 ```
 
 ### Running Python Scripts
 
 ```bash
 # From the repository root
-python Python/script_name.py
+python src/Python/script_name.py
 
 # With arguments
-python Python/script_name.py --argument value
-```
-
-### Running Bash/Shell Scripts
-
-```bash
-# Make sure script is executable first
-chmod +x Shell_BASH/script-name.sh
-
-# Execute the script
-bash Shell_BASH/script-name.sh
-
-# Or directly with shebang
-./Shell_BASH/script-name.sh
-```
-
-### Running JavaScript Scripts
-
-```bash
-# From the JS directory
-node script-name.js
-
-# Or from the repository root
-node JS/script-name.js
+python src/Python/script_name.py --argument value
 ```
 
 ## Getting Help
