@@ -25,7 +25,19 @@ $PSVersionTable.PSVersion
 
 # Set execution policy to allow scripts
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+# Install Microsoft Graph PowerShell SDK (required for Entra/Intune scripts)
+Install-Module Microsoft.Graph -Scope CurrentUser
 ```
+
+### Microsoft Graph Permissions for Stale Device Reporting
+
+The `src/Powershell/Get-StaleDevices.ps1` script requires Microsoft Graph delegated permissions:
+
+- `Device.Read.All`
+- `DeviceManagementServiceConfig.Read.All`
+
+When prompted during `Connect-MgGraph`, grant consent for these scopes.
 
 ### Python Setup
 

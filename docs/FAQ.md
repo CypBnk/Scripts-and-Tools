@@ -34,6 +34,22 @@ This project supports Windows, macOS, and Linux. Platform-specific instructions 
 
 Check the [README.md](../README.md) for basic examples and the [API Documentation](API.md) for detailed reference.
 
+### How do I find stale Entra devices and exclude Autopilot devices?
+
+Use `src/Powershell/Get-StaleDevices.ps1`.
+
+Example:
+
+```powershell
+.\src\Powershell\Get-StaleDevices.ps1 -MinDays 60 -MaxDays 3650 -Verbose
+```
+
+Optional CSV export:
+
+```powershell
+.\src\Powershell\Get-StaleDevices.ps1 -MinDays 90 -MaxDays 365 -CsvPath .\stale-devices.csv
+```
+
 ### How do I report a bug?
 
 Please open an [issue](../../issues) with a clear description and steps to reproduce.

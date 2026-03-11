@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - New feature descriptions
+- Added `src/Powershell/Get-StaleDevices.ps1` to report stale Entra devices by configurable day range (`MinDays`/`MaxDays`, 60..3650).
+- Added Autopilot exclusion logic in stale device reporting using both ZTDID detection and Windows Autopilot registration cross-check.
 
 ### Changed
 
