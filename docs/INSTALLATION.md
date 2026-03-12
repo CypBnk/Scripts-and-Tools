@@ -44,6 +44,19 @@ The `src/Powershell/Invoke-EntraDeviceCleanup.ps1` script uses:
 - Read-only mode: `Device.Read.All`, `DeviceManagementServiceConfig.Read.All`
 - Read+write mode: `Device.Read.All`, `Device.ReadWrite.All`, `DeviceManagementServiceConfig.Read.All`
 
+### Microsoft Graph Permissions for Security Group Usage Discovery
+
+The `src/Powershell/SecurityGroupUsage/SecurityGroupUsage.psm1` module uses delegated scopes:
+
+- `Directory.Read.All`
+- `Group.Read.All`
+- `Policy.Read.All`
+- `RoleManagement.Read.Directory`
+- `DeviceManagementApps.Read.All`
+- `Application.Read.All`
+
+Grant these scopes when prompted by `Connect-MgGraph`.
+
 ### Python Setup
 
 ```bash
@@ -99,6 +112,10 @@ chmod +x Shell_BASH/*.sh
 
 # Interactive Entra cleanup workflow
 .\src\Powershell\Invoke-EntraDeviceCleanup.ps1
+
+# Security group usage discovery
+Import-Module .\src\Powershell\SecurityGroupUsage\SecurityGroupUsage.psm1 -Force
+Invoke-SecurityGroupUsageDiscovery
 ```
 
 ### Running Python Scripts

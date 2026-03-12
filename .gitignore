@@ -69,4 +69,4 @@ tmp/
 *.bak
 *.old
 /src/powershell/to be sorted/*
-
+out/

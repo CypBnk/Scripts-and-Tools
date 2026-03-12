@@ -53,6 +53,25 @@ Use the interactive Entra cleanup script to authenticate, list devices, apply st
 
 The filter step supports predefined thresholds (30/90/365 days) and a custom day threshold.
 
+### Security Group Usage Discovery
+
+Use the standalone module with an internal workload/endpoint catalog and enrich findings from Microsoft Graph where available.
+
+```powershell
+Import-Module .\src\Powershell\SecurityGroupUsage\SecurityGroupUsage.psm1 -Force
+
+Invoke-SecurityGroupUsageDiscovery `
+    -OutputPath .\out\SecurityGroupUsage\latest
+```
+
+Default output artifacts:
+
+- Console summary
+- JSON dataset
+- Markdown report
+- CSV mapping export
+- HTML report
+
 ## Requirements
 
 **PowerShell:**
@@ -70,6 +89,7 @@ Notes:
 
 - Microsoft Graph PowerShell SDK is required for Entra/Intune PowerShell scripts.
 - Required delegated scopes depend on execution mode (read-only or read+write).
+- Security Group Usage Discovery uses Graph scopes: `Directory.Read.All`, `Group.Read.All`, `Policy.Read.All`, `RoleManagement.Read.Directory`, `DeviceManagementApps.Read.All`, and `Application.Read.All`.
 
 ## Contributing
 
