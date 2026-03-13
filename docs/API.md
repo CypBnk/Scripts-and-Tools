@@ -25,9 +25,31 @@ Key parameters:
 - OutputPath: Root output directory. Runtime writes to OutputPath/TenantName/YYYY-MM-DD-HH_MM/files.
 - SkipGraph: Skip Graph collection and generate baseline/report structure only.
 - Scopes: Delegated scopes used during Graph collection.
+- ReportMode: Static (default) or Dynamic HTML rendering.
 - AuthMethod: WAM, DeviceCode, or ClientCredentials.
 - TenantId, ClientId, ClientSecret: Used by ClientCredentials mode.
 - PassThru: Returns in-memory objects in addition to writing files.
+
+Output artifacts:
+
+- security-group-usage.json
+- security-group-usage-report.md
+- security-group-usage-report.html
+- security-group-usage-mapping.csv
+- security-group-hygiene.csv
+- security-group-orphan-candidates.csv
+- security-group-duplicate-candidates.csv
+- security-group-nested-map.csv (includes ParentGroupIds and ChildGroupIds)
+- security-group-decision-matrix.csv
+
+Current collector coverage:
+
+- Entra ID role assignments (group principals)
+- Enterprise Applications app role assignments (group principals)
+- Conditional Access include/exclude group assignments
+- Group-based licensing
+- Intune app, compliance policy, and device configuration profile assignments
+- Exchange Online mail-enabled security groups
 
 Authentication and prerequisites:
 

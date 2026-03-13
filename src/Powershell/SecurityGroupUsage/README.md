@@ -21,6 +21,16 @@ Invoke-SecurityGroupUsageDiscovery `
   -OutputPath .\out\SecurityGroupUsage
 ```
 
+Quick smoke test without Graph authentication:
+
+```powershell
+Import-Module .\src\Powershell\SecurityGroupUsage\SecurityGroupUsage.psm1 -Force
+
+Invoke-SecurityGroupUsageDiscovery `
+  -SkipGraph `
+  -OutputPath .\out\SecurityGroupUsage\smoke-test
+```
+
 By default, files are written to:
 
 `<OutputPath>/<TenantName>/YYYY-MM-DD-HH_MM/`
@@ -35,6 +45,7 @@ Example:
 - `SkipGraph` (optional switch): Build catalog and report without Graph collection.
 - `Scopes` (optional): Graph delegated scopes for collection.
 - `PassThru` (optional switch): Returns in-memory objects.
+- `ReportMode` (optional): `Static` (default) or `Dynamic`. `Dynamic` attempts to render the HTML report via PSWriteHTML and falls back to static rendering if unavailable.
 - `AuthMethod` (optional): `WAM`, `DeviceCode`, or `ClientCredentials`. If omitted, you are prompted.
 - `TenantId` (optional): Tenant identifier (used with `ClientCredentials`; also used as fallback output folder tenant segment).
 - `ClientId` (optional): App registration client id (used with `ClientCredentials`).
@@ -48,6 +59,12 @@ Before discovery starts, the module validates prerequisites and fails fast if an
 - Microsoft Graph PowerShell SDK installed
 - `Microsoft.Graph.Authentication` version `2.34.0` or newer
 - Required Graph commands (`Connect-MgGraph`, `Disconnect-MgGraph`, `Invoke-MgGraphRequest`) are available after import
+
+When `-ReportMode Dynamic` is selected, prerequisite validation also checks:
+
+- `PSWriteHTML` installed
+- `PSWriteHTML` imported successfully
+- Required commands (`New-HTML`, `New-HTMLTable`) available after import
 
 `Connect-SguGraph` uses the silent prerequisite mode internally and only prints a single pass/fail indicator.
 
@@ -68,6 +85,11 @@ Before discovery starts, the module validates prerequisites and fails fast if an
 - `security-group-nested-map.csv`
 - `security-group-decision-matrix.csv`
 - `security-group-usage-report.html`
+
+`security-group-nested-map.csv` includes both counts and direct relationship columns:
+
+- `ParentGroupCount`, `ParentGroupIds`
+- `ChildGroupCount`, `ChildGroupIds`
 
 ## Current Collector Coverage
 
@@ -95,6 +117,11 @@ Reference-only or partial coverage (current baseline):
 - `DeviceManagementApps.Read.All`
 - `DeviceManagementConfiguration.Read.All`
 - `Application.Read.All`
+
+## Notes
+
+- `OwnerIds` are not persisted yet; current governance output includes `OwnerCount`.
+- `EvidenceConfidence` is planned but not part of the current evidence schema.
 
 ## Detection Logic and Known False-Positive Scenarios
 

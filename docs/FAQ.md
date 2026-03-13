@@ -51,6 +51,13 @@ Example:
 
 - out/SecurityGroupUsage/Contoso Ltd/2026-03-13-21_42/security-group-usage.json
 
+Quick validation without Graph authentication:
+
+```powershell
+Import-Module .\src\Powershell\SecurityGroupUsage\SecurityGroupUsage.psm1 -Force
+Invoke-SecurityGroupUsageDiscovery -SkipGraph -OutputPath .\out\SecurityGroupUsage\smoke-test
+```
+
 ### Which authentication methods are supported in Security Group Usage Discovery?
 
 - WAM
@@ -70,7 +77,7 @@ The module runs prerequisite validation first and fails fast when requirements a
 
 ### How do I find stale Entra devices and exclude Autopilot devices?
 
-Use `src/Powershell/Get-StaleDevices.ps1`.
+Use `src/Powershell/Intune-MDM-Management/Get-StaleDevices.ps1`.
 
 Example:
 

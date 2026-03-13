@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed SecurityGroupUsage output folder structure to `<OutputPath>/<TenantName>/YYYY-MM-DD-HH_MM/<files>`.
 - Changed SecurityGroupUsage enterprise app collection to show nested per-service-principal progress and verbose diagnostics (`Write-Progress` + `Write-Verbose`).
 - Changed SecurityGroupUsage docs and examples to use `out/SecurityGroupUsage` as the output root and nested tenant/timestamp folders at runtime.
+- Changed SecurityGroupUsage documentation in module README, API docs, and FAQ to include quick no-auth smoke testing and current output/coverage details.
 
 ### Fixed
 
