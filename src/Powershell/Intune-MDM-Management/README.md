@@ -1,104 +1,120 @@
 # Intune MDM Management Scripts
 
-This folder contains PowerShell scripts for managing Microsoft Intune and Mobile Device Management (MDM) enrollment on Windows devices.
+PowerShell scripts in this folder help with Intune and Entra device lifecycle operations:
+
+- Repairing broken Windows MDM enrollment state
+- Finding stale Entra devices while excluding Autopilot devices
+- Guided cleanup (optional deletion) of stale non-Autopilot Entra devices
 
 ## Scripts
 
 ### Delete RegKeys.ps1
 
-Removes stale Intune/MDM enrollment artifacts and reinitializes the enrollment process.
+Removes stale Intune/MDM enrollment artifacts from a Windows device and triggers re-enrollment.
 
-**Purpose:**
+What it does:
 
-- Clean up failed or problematic Intune enrollments
-- Remove orphaned scheduled tasks related to Enterprise Device Management
-- Clear registry entries for Intune management
-- Reset the MDM enrollment certificate
-- Reinitiate the enrollment process to establish a fresh connection
+1. Resolves the current EnterpriseMGMT enrollment ID from scheduled tasks.
+2. Removes EnterpriseMGMT scheduled tasks for that enrollment.
+3. Deletes enrollment-related registry keys under:
+   - `HKLM:\SOFTWARE\Microsoft\Enrollments`
+   - `HKLM:\SOFTWARE\Microsoft\Enrollments\Status`
+   - `HKLM:\SOFTWARE\Microsoft\EnterpriseResourceManager\Tracked`
+   - `HKLM:\SOFTWARE\Microsoft\PolicyManager\AdmxInstalled`
+   - `HKLM:\SOFTWARE\Microsoft\PolicyManager\Providers`
+   - `HKLM:\SOFTWARE\Microsoft\Provisioning\OMADM\Accounts`
+   - `HKLM:\SOFTWARE\Microsoft\Provisioning\OMADM\Logger`
+   - `HKLM:\SOFTWARE\Microsoft\Provisioning\OMADM\Sessions`
+4. Removes related Task Scheduler cache path under `TaskCache\Tree\Microsoft\Windows\EnterpriseMgmt`.
+5. Removes `Microsoft Intune MDM Device CA` certificate from `cert:\LocalMachine\My`.
+6. Starts `deviceenroller.exe /c /AutoEnrollMDM`.
 
-**What This Script Does:**
-
-1. **Removes Scheduled Tasks** - Deletes scheduled tasks in the EnterpriseMGMT folder that are associated with the current enrollment ID
-2. **Cleans Registry** - Removes registry keys from multiple locations:
-   - Enrollments
-   - Enrollments Status
-   - EnterpriseResourceManager Tracked
-   - PolicyManager AdmxInstalled
-   - PolicyManager Providers
-   - Provisioning OMADM Accounts
-   - Provisioning OMADM Logger
-   - Provisioning OMADM Sessions
-3. **Removes Task Cache** - Deletes the EnterpriseMgmt folder from the Task Scheduler cache
-4. **Deletes Certificate** - Removes the Intune MDM Device CA certificate from the local machine store
-5. **Reinitializes Enrollment** - Starts the deviceenroller.exe process to begin fresh MDM enrollment
-
-**Prerequisites:**
-
-- Windows 7 or higher
-- PowerShell 5.0 or higher
-- Administrator privileges (required - must run as Administrator)
-- Device must be connected to the network
-- Microsoft Intune/MDM service available
-- Azure AD or Microsoft 365 account
-
-**Usage:**
+Usage (run as Administrator):
 
 ```powershell
-# Run as Administrator
-.\Delete\ RegKeys.ps1
+.\Delete RegKeys.ps1
 ```
 
-**Caution:**
+Notes:
 
-⚠️ **WARNING**: This script makes significant changes to system registry and scheduled tasks. Only use if you:
+- This is a high-impact local remediation script.
+- The device can become temporarily non-compliant until enrollment is re-established.
+- Keep the device online during re-enrollment.
 
-- Understand the implications of removing MDM enrollment
-- Have encountered persistent Intune enrollment failures
-- Have administrative approval
-- Have backed up your system or can restore from recovery
+### Get-StaleDevices.ps1 - WIP
 
-**Expected Behavior:**
+Queries Microsoft Graph for stale Entra devices and excludes Autopilot devices.
 
-- Script runs without prompts (Confirm:$false)
-- Device will lose MDM compliance temporarily
-- Enrollment will restart automatically
-- Enrollment process typically completes within 5-10 minutes
-- Device must remain powered on and connected to network during process
+Filtering behavior:
 
-**Troubleshooting:**
+- Uses `approximateLastSignInDateTime` range (`-MinDays` to `-MaxDays`, inclusive)
+- Excludes Autopilot devices by:
+  - `[ZTDID]` marker in `physicalIds`
+  - Cross-check against `windowsAutopilotDeviceIdentities` registrations (when available)
 
-If the script fails:
+Key parameters:
 
-1. Ensure you are running as Administrator
-2. Verify network connectivity
-3. Check that the enrollment ID is correctly identified
-4. Review Windows Event Viewer for relevant errors
-5. Restart the device and try again
+- `MinDays` (default `60`, range `60..3650`)
+- `MaxDays` (default `3650`, range `60..3650`)
+- `CsvPath` (optional export path)
+- `Scopes` (optional Graph scopes)
 
-**Credits & References:**
+Examples:
 
-This script was inspired by and based on the methodology described in:
+```powershell
+.\Get-StaleDevices.ps1 -MinDays 60 -MaxDays 3650
+```
 
-- [Manually re-enroll a co-managed or hybrid Azure AD join Windows 10 PC to Microsoft Intune without losing current configuration](https://www.maximerastello.com/manually-re-enroll-a-co-managed-or-hybrid-azure-ad-join-windows-10-pc-to-microsoft-intune-without-loosing-current-configuration/) by Maxime Rastello
+```powershell
+.\Get-StaleDevices.ps1 -MinDays 90 -MaxDays 365 -CsvPath .\stale-devices.csv
+```
 
-**Related Documentation:**
+### Invoke-EntraDeviceCleanup.ps1 - WIP
 
-- [Microsoft Intune Enrollment Troubleshooting](https://docs.microsoft.com/en-us/intune/enrollment/troubleshoot-windows-enrollment-errors)
-- [Windows MDM Guide](https://docs.microsoft.com/en-us/windows/client-management/mdm/)
-- [Intune Enrollment Overview](https://docs.microsoft.com/en-us/intune/enrollment/)
+Interactive workflow for reviewing and optionally deleting stale non-Autopilot Entra devices.
 
-**Security Considerations:**
+Session flow:
 
-- This script modifies critical system registry locations
-- Only run on devices you own or have explicit permission to manage
-- Review the script contents before execution
-- Keep audit logs of when this script is run
-- Ensure proper change management procedures are followed
+1. Authentication (read-only or read+write mode)
+2. Device inventory listing (with owner, OS, trust type, compliance, last sign-in)
+3. Staleness filter (30 / 90 / 365 days or custom)
+4. Optional delete step for eligible non-Autopilot devices
 
-**Support:**
+Safety and logging:
 
-For issues or questions about Intune enrollment:
+- Autopilot devices are excluded from deletion candidates.
+- Deletion requires explicit typed confirmation (`yes`).
+- Step logs are written to `%TEMP%\Magentascripts\<timestamp>_Step<N>.log`.
 
-1. Check [Microsoft Intune Support](https://docs.microsoft.com/en-us/intune/)
-2. Review device enrollment logs in Settings > Accounts > Access work or school
-3. Contact your IT administrator or helpdesk
+Usage:
+
+```powershell
+.\Invoke-EntraDeviceCleanup.ps1
+```
+
+## Prerequisites
+
+- Windows PowerShell 5.1 or PowerShell 7+
+- Microsoft Graph PowerShell SDK installed (`Install-Module Microsoft.Graph -Scope CurrentUser`)
+- Network connectivity to Microsoft Graph
+- Appropriate Entra/Intune permissions and admin consent where required
+
+Suggested delegated Graph scopes used by scripts in this folder:
+
+- `Device.Read.All`
+- `DeviceManagementServiceConfig.Read.All`
+- `Device.ReadWrite.All` (required only for deletion in read+write mode)
+
+## Operational Guidance
+
+- Test in a pilot or lab tenant/device group first.
+- Use read-only discovery before enabling deletion workflows.
+- Export and review stale device lists before cleanup decisions.
+- Follow your organization's change-control process.
+
+## References
+
+- [Manually re-enroll a co-managed or hybrid Azure AD join Windows 10 PC to Microsoft Intune without losing current configuration](https://www.maximerastello.com/manually-re-enroll-a-co-managed-or-hybrid-azure-ad-join-windows-10-pc-to-microsoft-intune-without-loosing-current-configuration/)
+- [Troubleshoot Windows enrollment errors in Intune](https://learn.microsoft.com/intune/intune-service/enrollment/troubleshoot-windows-enrollment-errors)
+- [What is device management? (Windows client MDM)](https://learn.microsoft.com/windows/client-management/mdm/)
+- [Intune enrollment guide](https://learn.microsoft.com/intune/intune-service/enrollment/)
