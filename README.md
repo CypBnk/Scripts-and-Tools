@@ -15,7 +15,7 @@ This repository contains a curated collection of scripts for system administrati
 
 ## Repository Structure
 
-```
+```text
 .
 ├── src/
 │   ├── Powershell/      # PowerShell scripts for Windows administration
@@ -70,6 +70,11 @@ Default output artifacts:
 - JSON dataset
 - Markdown report
 - CSV mapping export
+- CSV hygiene export
+- CSV orphan-candidates export
+- CSV duplicate-candidates export
+- CSV nested-map export
+- CSV decision-matrix export
 - HTML report
 
 ## Requirements
@@ -89,7 +94,7 @@ Notes:
 
 - Microsoft Graph PowerShell SDK is required for Entra/Intune PowerShell scripts.
 - Required delegated scopes depend on execution mode (read-only or read+write).
-- Security Group Usage Discovery uses Graph scopes: `Directory.Read.All`, `Group.Read.All`, `Policy.Read.All`, `RoleManagement.Read.Directory`, `DeviceManagementApps.Read.All`, and `Application.Read.All`.
+- Security Group Usage Discovery uses Graph scopes: `Directory.Read.All`, `Group.Read.All`, `Policy.Read.All`, `RoleManagement.Read.Directory`, `DeviceManagementApps.Read.All`, `DeviceManagementConfiguration.Read.All`, and `Application.Read.All`.
 
 ## Contributing
 

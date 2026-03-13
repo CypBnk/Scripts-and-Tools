@@ -7,18 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Added (Unreleased)
 
 - Added `src/Powershell/Get-StaleDevices.ps1` to report stale Entra devices by configurable day range (`MinDays`/`MaxDays`, 60..3650).
 - Added Autopilot exclusion logic in stale device reporting using both ZTDID detection and Windows Autopilot registration cross-check.
 - Added `src/Powershell/Invoke-EntraDeviceCleanup.ps1` as an interactive step-by-step cleanup workflow for Entra devices.
 - Added a custom staleness threshold option in Step 2 of the cleanup workflow.
 - Added a session step overview that shows read-only vs read+write flow before authentication.
+- Added SecurityGroupUsage exports: `security-group-hygiene.csv`, `security-group-orphan-candidates.csv`, `security-group-duplicate-candidates.csv`, `security-group-nested-map.csv`, and `security-group-decision-matrix.csv`.
+- Added Decision Matrix enrichment for security groups (`CleanupRecommendation`, `RecommendationReason`, `RequiredValidationStep`, `ValidationOwner`).
+- Added SecurityGroupUsage collectors for Enterprise Applications app role assignments, Intune compliance/configuration profile assignments, and Exchange Online mail-enabled security groups.
 
 ### Changed
 
 - Changed execution mode selection to happen before authentication in `src/Powershell/Invoke-EntraDeviceCleanup.ps1`.
 - Changed `Invoke-Step0` to accept a permission level parameter instead of returning a mode choice.
+- Changed SecurityGroupUsage evidence output so CSV and HTML evidence sections use one unified Evidence ViewModel.
+- Changed SecurityGroupUsage HTML report layout to include section navigation, summary cards, and risk highlighting for decision matrix rows.
+- Changed SecurityGroupUsage default Graph scope set to include `DeviceManagementConfiguration.Read.All`.
+- Changed SecurityGroupUsage runtime UX to include step-based progress and workload progress indicators.
 
 ### Fixed
 
@@ -32,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2026-01-16
 
-### Added
+### Added (1.0.0)
 
 - Initial release of multi-script repository
 - PowerShell script collection

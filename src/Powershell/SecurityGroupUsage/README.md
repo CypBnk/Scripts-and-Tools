@@ -33,6 +33,11 @@ Invoke-SecurityGroupUsageDiscovery `
 - `security-group-usage.json`
 - `security-group-usage-report.md`
 - `security-group-usage-mapping.csv`
+- `security-group-hygiene.csv`
+- `security-group-orphan-candidates.csv`
+- `security-group-duplicate-candidates.csv`
+- `security-group-nested-map.csv`
+- `security-group-decision-matrix.csv`
 - `security-group-usage-report.html`
 
 ## Current Collector Coverage
@@ -40,14 +45,17 @@ Invoke-SecurityGroupUsageDiscovery `
 Implemented Graph collectors:
 
 - Entra ID role assignments where group principals are present
+- Enterprise Applications app role assignments where group principals are present
 - Conditional Access policy group include/exclude assignments
 - Group-based licensing via groups with assigned licenses
-- Intune app assignment targets with group IDs
+- Intune app, device compliance policy, and device configuration profile group assignments
+- Exchange Online mail-enabled security groups
+- Security group hygiene enrichment (created date, cloud/on-prem classification, owner/member counts, nested flags, duplicate indicators)
+- Decision matrix enrichment (Keep, Review, RemoveCandidate)
 
 Reference-only or partial coverage (current baseline):
 
-- Enterprise Applications (partial)
-- Exchange/SharePoint/Teams/Purview areas where workload-specific APIs or admin endpoints are required
+- Purview Insider Risk, SharePoint, Teams, and Defender areas where workload-specific APIs/admin endpoints require manual validation
 
 ## Required Graph Scopes
 
@@ -56,4 +64,5 @@ Reference-only or partial coverage (current baseline):
 - `Policy.Read.All`
 - `RoleManagement.Read.Directory`
 - `DeviceManagementApps.Read.All`
+- `DeviceManagementConfiguration.Read.All`
 - `Application.Read.All`

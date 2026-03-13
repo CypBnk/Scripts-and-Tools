@@ -22,15 +22,15 @@ function Get-SguCatalog {
             Id                 = 2
             Section            = 'Core Identity Assignments'
             UsageArea          = 'Enterprise Applications'
-            Capability         = 'PartiallyQueryable'
-            QueryStrategy      = 'Service principal and app role assignment discovery'
+            Capability         = 'Queryable'
+            QueryStrategy      = 'Enumerate all service principals and collect group-targeted app role assignments via appRoleAssignedTo'
             RequiredScopes     = @('Application.Read.All', 'Group.Read.All')
             EndpointCandidates = @(
-                'https://graph.microsoft.com/v1.0/servicePrincipals?$select=id,displayName,appId',
-                'https://graph.microsoft.com/v1.0/servicePrincipals/{id}/appRoleAssignedTo?$select=id,principalId,principalType,resourceDisplayName'
+                'https://graph.microsoft.com/v1.0/servicePrincipals?$select=id,displayName',
+                'https://graph.microsoft.com/v1.0/servicePrincipals/{id}/appRoleAssignedTo?$select=id,principalId,principalType,principalDisplayName'
             )
             Links              = @(
-                'https://learn.microsoft.com/en-us/entra/fundamentals/concept-learn-about-groups'
+                'https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/what-is-application-management'
             )
         }
         [pscustomobject]@{
@@ -66,15 +66,20 @@ function Get-SguCatalog {
             Section            = 'Endpoint Management'
             UsageArea          = 'Intune Apps, Profiles, Compliance Policies'
             Capability         = 'Queryable'
-            QueryStrategy      = 'Graph Intune app assignments group targets'
-            RequiredScopes     = @('DeviceManagementApps.Read.All', 'Group.Read.All')
+            QueryStrategy      = 'Graph Intune app, device compliance policy, and device configuration profile assignments to groups'
+            RequiredScopes     = @('DeviceManagementApps.Read.All', 'DeviceManagementConfiguration.Read.All', 'Group.Read.All')
             EndpointCandidates = @(
                 'https://graph.microsoft.com/v1.0/deviceAppManagement/mobileApps?$select=id,displayName',
-                'https://graph.microsoft.com/v1.0/deviceAppManagement/mobileApps/{id}/assignments'
+                'https://graph.microsoft.com/v1.0/deviceAppManagement/mobileApps/{id}/assignments',
+                'https://graph.microsoft.com/v1.0/deviceManagement/deviceCompliancePolicies?$select=id,displayName',
+                'https://graph.microsoft.com/v1.0/deviceManagement/deviceCompliancePolicies/{id}/assignments',
+                'https://graph.microsoft.com/v1.0/deviceManagement/deviceConfigurations?$select=id,displayName',
+                'https://graph.microsoft.com/v1.0/deviceManagement/deviceConfigurations/{id}/assignments'
             )
             Links              = @(
                 'https://learn.microsoft.com/en-us/intune/intune-service/apps/apps-deploy',
-                'https://learn.microsoft.com/en-us/intune/intune-service/fundamentals/quickstart-create-group'
+                'https://learn.microsoft.com/en-us/intune/intune-service/fundamentals/quickstart-create-group',
+                'https://learn.microsoft.com/en-us/intune/intune-service/protect/device-compliance-get-started'
             )
         }
         [pscustomobject]@{
@@ -96,8 +101,8 @@ function Get-SguCatalog {
             Id                 = 7
             Section            = 'Communication Services'
             UsageArea          = 'Exchange Online (Mail-enabled Security Groups)'
-            Capability         = 'PartiallyQueryable'
-            QueryStrategy      = 'Graph inventory of mail-enabled groups; Exchange-specific usage requires EXO cmdlets'
+            Capability         = 'Queryable'
+            QueryStrategy      = 'Enumerate mail-enabled security groups via Graph; Exchange transport rule and policy usage requires manual EXO validation'
             RequiredScopes     = @('Group.Read.All')
             EndpointCandidates = @(
                 'https://graph.microsoft.com/v1.0/groups?$filter=mailEnabled eq true and securityEnabled eq true&$select=id,displayName,mail'
@@ -105,6 +110,7 @@ function Get-SguCatalog {
             Links              = @(
                 'https://learn.microsoft.com/en-us/exchange/recipients-in-exchange-online/manage-mail-enabled-security-groups'
             )
+            ManualValidationHint = 'Review Exchange Admin Center for transport rules and distribution group policies referencing these groups.'
         }
         [pscustomobject]@{
             Id                 = 8
@@ -132,8 +138,25 @@ function Get-SguCatalog {
                 'https://graph.microsoft.com/beta/teamwork/teamsAppSettings'
             )
             Links              = @(
-                'https://learn.microsoft.com/en-us/entra/fundamentals/concept-learn-about-groups'
+                'https://learn.microsoft.com/en-us/microsoftteams/assign-policies-users-and-groups'
             )
+            ManualValidationHint = 'Use Teams PowerShell (Get-CsUserPolicyAssignment) or Teams Admin Center to check group-based policy assignments.'
+        }
+        [pscustomobject]@{
+            Id                 = 10
+            Section            = 'Security Operations'
+            UsageArea          = 'Microsoft Defender XDR (Roles, Device Groups)'
+            Capability         = 'PartiallyQueryable'
+            QueryStrategy      = 'Defender XDR role assignments and device group memberships are not fully accessible via standard Graph; manual validation required'
+            RequiredScopes     = @()
+            EndpointCandidates = @(
+                'https://security.microsoft.com/settings/endpoints/roles'
+            )
+            Links              = @(
+                'https://learn.microsoft.com/en-us/defender-xdr/manage-rbac',
+                'https://learn.microsoft.com/en-us/defender-endpoint/machine-groups'
+            )
+            ManualValidationHint = 'In Microsoft Defender XDR, review unified RBAC roles under Settings > Microsoft Defender XDR > Roles. For MDE device groups, check Settings > Endpoints > Device groups in the Defender portal.'
         }
     )
 
