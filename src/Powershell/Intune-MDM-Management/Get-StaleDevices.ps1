@@ -199,6 +199,11 @@ Write-Verbose 'Retrieving Entra devices from Microsoft Graph...'
 $deviceUri = 'https://graph.microsoft.com/v1.0/devices?$select=id,deviceId,displayName,operatingSystem,approximateLastSignInDateTime,physicalIds,accountEnabled'
 $devices = Get-AllGraphPages -Uri $deviceUri
 
+# Show progress for device scan loop (nested visual progress)
+$deviceTotal = if ($null -eq $devices) { 0 } else { $devices.Count }
+$deviceIndex = 0
+Write-Verbose ('Scanning {0} Entra device(s)...' -f $deviceTotal)
+
 Write-Verbose 'Retrieving Windows Autopilot identities from Microsoft Graph...'
 $autopilotUri = 'https://graph.microsoft.com/v1.0/deviceManagement/windowsAutopilotDeviceIdentities'
 $autopilotCrossCheckAvailable = $true
@@ -226,6 +231,15 @@ $excludedByAutopilot = 0
 
 $results = foreach ($device in $devices) {
     $totalScanned++
+
+    # Update nested progress for device processing
+    $deviceIndex++
+    $deviceObjectId = [string](Get-ObjectPropertyValue -Object $device -PropertyName 'id')
+    $deviceId = [string](Get-ObjectPropertyValue -Object $device -PropertyName 'deviceId')
+    $displayName = [string](Get-ObjectPropertyValue -Object $device -PropertyName 'displayName')
+    $deviceDisplay = if (-not [string]::IsNullOrWhiteSpace($displayName)) { $displayName } elseif (-not [string]::IsNullOrWhiteSpace($deviceId)) { $deviceId } else { $deviceObjectId }
+    $progressPct = [int](($deviceIndex / [Math]::Max(1, $deviceTotal)) * 100)
+    Write-Progress -Activity 'Scanning Entra devices' -Status ('{0}/{1}: {2}' -f $deviceIndex, $deviceTotal, $deviceDisplay) -PercentComplete $progressPct
 
     $deviceObjectId = [string](Get-ObjectPropertyValue -Object $device -PropertyName 'id')
     $deviceId = [string](Get-ObjectPropertyValue -Object $device -PropertyName 'deviceId')
@@ -283,6 +297,9 @@ $results = foreach ($device in $devices) {
         IsAutopilotByRegistration = $isAutopilotByRegistration
     }
 }
+
+# Complete nested progress activity
+Write-Progress -Activity 'Scanning Entra devices' -Completed
 
 Write-Verbose ('Total devices scanned: {0}' -f $totalScanned)
 Write-Verbose ('Devices without last sign-in: {0}' -f $missingLastSignIn)

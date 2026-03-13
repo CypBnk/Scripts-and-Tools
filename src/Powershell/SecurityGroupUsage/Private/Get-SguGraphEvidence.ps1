@@ -446,10 +446,24 @@ function Get-SguGraphEvidence {
                 $servicePrincipals = Invoke-SguGraphPagedRequest -Uri $spEndpoint
                 $count = 0
 
+                # Enterprise Applications: show nested progress and verbose diagnostics
+                $spTotal = if ($null -eq $servicePrincipals) { 0 } else { $servicePrincipals.Count }
+                $spIndex = 0
+                Write-Verbose ('    Enterprise Applications: {0} service principal(s) to scan' -f $spTotal)
+
                 foreach ($sp in $servicePrincipals) {
+                    $spIndex++
                     $spId = [string](Get-SguValue -Object $sp -Name 'id')
                     $spDisplayName = [string](Get-SguValue -Object $sp -Name 'displayName')
                     if ([string]::IsNullOrWhiteSpace($spId)) { continue }
+
+                    $spDisplay = if (-not [string]::IsNullOrWhiteSpace($spDisplayName)) { $spDisplayName } else { $spId }
+
+                    # Nested visual progress for enterprise app loop
+                    $spPercent = [int](($spIndex / [Math]::Max(1, $spTotal)) * 100)
+                    Write-Progress -Id 2 -Activity 'Enterprise Applications' -Status ('{0}/{1}: {2}' -f $spIndex, $spTotal, $spDisplay) -PercentComplete $spPercent
+
+                    Write-Verbose ('      Processing service principal {0}/{1}: {2} (id: {3})' -f $spIndex, $spTotal, $spDisplay, $spId)
 
                     $assignmentsEndpoint = ('https://graph.microsoft.com/v1.0/servicePrincipals/{0}/appRoleAssignedTo?$select=id,principalId,principalType,principalDisplayName' -f $spId)
                     try {
@@ -472,9 +486,17 @@ function Get-SguGraphEvidence {
                                 -SourceLink $assignmentsEndpoint
                             $count++
                         }
+
+                        Write-Verbose ('      Found {0} group assignment(s) for {1}' -f $count, $spDisplay)
                     }
-                    catch { continue }
+                    catch {
+                        Write-Verbose ('      Failed to fetch assignments for {0}: {1}' -f $spDisplay, $_.Exception.Message)
+                        continue
+                    }
                 }
+
+                # Ensure nested progress is completed
+                Write-Progress -Id 2 -Activity 'Enterprise Applications' -Completed
 
                 Add-Telemetry -Workload $entry.UsageArea -Endpoint $spEndpoint -Start $start -ItemCount $count -Status 'Success' -ErrorText ''
                 $status = 'Queryable'

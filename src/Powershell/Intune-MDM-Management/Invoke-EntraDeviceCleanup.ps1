@@ -317,7 +317,20 @@ function Invoke-Step1 {
     }
 
     # ── Enrich ────────────────────────────────────────────────────────────────
+    # Nested progress for enrichment loop
+    $rawTotal = if ($null -eq $rawDevices) { 0 } else { $rawDevices.Count }
+    $rawIndex = 0
+    Write-Verbose ('Enriching {0} device(s)...' -f $rawTotal)
+
     $enriched = foreach ($d in $rawDevices) {
+        # Update nested progress
+        $rawIndex++
+        $displayName = [string](Get-PropValue -Obj $d -Name 'displayName')
+        $devId = [string](Get-PropValue -Obj $d -Name 'deviceId')
+        $objId = [string](Get-PropValue -Obj $d -Name 'id')
+        $deviceDisplay = if (-not [string]::IsNullOrWhiteSpace($displayName)) { $displayName } elseif (-not [string]::IsNullOrWhiteSpace($devId)) { $devId } else { $objId }
+        $progressPct = [int](($rawIndex / [Math]::Max(1, $rawTotal)) * 100)
+        Write-Progress -Activity 'Listing devices' -Status ('{0}/{1}: {2}' -f $rawIndex, $rawTotal, $deviceDisplay) -PercentComplete $progressPct
         $owners = Get-PropValue -Obj $d -Name 'registeredOwners'
         $ownerUpn = ''
         if ($owners -and ($owners | Measure-Object).Count -gt 0) {
@@ -363,6 +376,9 @@ function Invoke-Step1 {
             EntraDeviceId = [string](Get-PropValue -Obj $d -Name 'deviceId')
         }
     }
+
+    # Ensure nested progress is completed
+    Write-Progress -Activity 'Listing devices' -Completed
 
     # ── Display ───────────────────────────────────────────────────────────────
     $total = ($enriched | Measure-Object).Count

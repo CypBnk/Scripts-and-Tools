@@ -61,7 +61,7 @@ function Invoke-SecurityGroupUsageDiscovery {
             return 'UnknownTenant'
         }
 
-        $invalidChars = [System.IO.Path]::GetInvalidFileNameChars() + [char[]]@('/', '\\')
+        $invalidChars = [System.IO.Path]::GetInvalidFileNameChars() + [char[]]@('/', '\')
         $invalidClass = [Regex]::Escape(($invalidChars -join ''))
         $safe = [Regex]::Replace($candidate, ('[{0}]' -f $invalidClass), '_')
         $safe = $safe.Trim().TrimEnd('.')
@@ -215,6 +215,9 @@ function Invoke-SecurityGroupUsageDiscovery {
     }
 
     $resolvedOutputPath = Join-Path (Join-Path $OutputPath (& $toSafePathSegment $tenantSegment)) $timestampSegment
+    Write-Verbose ('Requested output path: {0}' -f $OutputPath)
+    Write-Debug ('Output path tenant segment source: {0}' -f $tenantSegment)
+    Write-Verbose ('Resolved output path: {0}' -f $resolvedOutputPath)
 
     Write-Host '  [4/4] Writing output files...' -ForegroundColor DarkGray -NoNewline
     $outFiles = Write-SguOutputs -OutputPath $resolvedOutputPath -Catalog $catalog -Matrix $matrix -Evidence $evidenceBundle.Evidence -Coverage $evidenceBundle.Coverage -Telemetry $evidenceBundle.Telemetry -SecurityGroups $evidenceBundle.SecurityGroups -GraphEnabled $graphEnabled

@@ -23,11 +23,11 @@ Invoke-SecurityGroupUsageDiscovery `
 
 By default, files are written to:
 
-`<OutputPath>\<TenantName>\YYYY-MM-DD-HH_MM\`
+`<OutputPath>/<TenantName>/YYYY-MM-DD-HH_MM/`
 
 Example:
 
-`out\SecurityGroupUsage\Contoso Ltd\2026-03-13-21_42\`
+`out/SecurityGroupUsage/Contoso Ltd/2026-03-13-21_42/`
 
 ## Parameters
 
@@ -97,6 +97,13 @@ Reference-only or partial coverage (current baseline):
 - `Application.Read.All`
 
 ## Detection Logic and Known False-Positive Scenarios
+
+## **Progress & Verbose Output**
+
+- **Default progress:** The cmdlet displays a step-based progress summary (`[1/4]` … `[4/4]`) and a workload-level `Write-Progress` activity while collecting evidence.
+- **Enterprise Applications:** During Enterprise Applications collection the cmdlet now shows a nested, per-app `Write-Progress` indicator so you can see which service principal is currently being scanned and the inner percent complete.
+- **Verbose diagnostics:** Run the cmdlet with `-Verbose` to receive concise per-service-principal diagnostics (service principal index/total, display name, and assignment counts) and fetch-failure notes to aid troubleshooting.
+- **No CLI change:** This enhancement uses `Write-Progress` and `Write-Verbose` only and does not add any new parameters; enable detailed output via `-Verbose` as usual.
 
 ### Duplicate Detection
 
