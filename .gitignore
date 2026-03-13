@@ -70,3 +70,4 @@ tmp/
 *.old
 /src/powershell/to be sorted/*
 out/
+.github/
