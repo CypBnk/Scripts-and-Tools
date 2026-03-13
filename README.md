@@ -124,7 +124,7 @@ See [CHANGELOG.md](docs/CHANGELOG.md) for version history.
 
 ## Authors
 
-- Your Name (@username)
+- Marc Holländer (@cypBnk)
 
 ## Acknowledgments
 
