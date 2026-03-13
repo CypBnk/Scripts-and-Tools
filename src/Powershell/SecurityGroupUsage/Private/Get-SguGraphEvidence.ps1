@@ -157,7 +157,9 @@ function Get-SguGraphEvidence {
             $ownerCount = 0
             $memberCount = 0
             $childGroupCount = 0
+            $childGroupIds = @()
             $parentGroupCount = 0
+            $parentGroupIds = @()
 
             try {
                 $ownersEndpoint = ('https://graph.microsoft.com/v1.0/groups/{0}/owners?$select=id' -f $groupId)
@@ -181,18 +183,22 @@ function Get-SguGraphEvidence {
                 $childGroupsEndpoint = ('https://graph.microsoft.com/v1.0/groups/{0}/members/microsoft.graph.group?$select=id' -f $groupId)
                 $childGroups = Invoke-SguGraphPagedRequest -Uri $childGroupsEndpoint
                 $childGroupCount = @($childGroups).Count
+                $childGroupIds = @($childGroups | ForEach-Object { [string](Get-SguValue -Object $_ -Name 'id') } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
             }
             catch {
                 $childGroupCount = 0
+                $childGroupIds = @()
             }
 
             try {
                 $parentGroupsEndpoint = ('https://graph.microsoft.com/v1.0/groups/{0}/memberOf/microsoft.graph.group?$select=id' -f $groupId)
                 $parentGroups = Invoke-SguGraphPagedRequest -Uri $parentGroupsEndpoint
                 $parentGroupCount = @($parentGroups).Count
+                $parentGroupIds = @($parentGroups | ForEach-Object { [string](Get-SguValue -Object $_ -Name 'id') } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
             }
             catch {
                 $parentGroupCount = 0
+                $parentGroupIds = @()
             }
 
             $normalizedDisplayName = (($groupDisplayName -replace '\s+', ' ').Trim()).ToLowerInvariant()
@@ -235,7 +241,9 @@ function Get-SguGraphEvidence {
                     NoOwners                     = ($ownerCount -eq 0)
                     NoMembers                    = ($memberCount -eq 0)
                     ParentGroupCount             = $parentGroupCount
+                    ParentGroupIds               = ($parentGroupIds -join ';')
                     ChildGroupCount              = $childGroupCount
+                    ChildGroupIds                = ($childGroupIds -join ';')
                     IsNestedParent               = ($childGroupCount -gt 0)
                     IsNestedChild                = ($parentGroupCount -gt 0)
                     DuplicateByName              = $false
@@ -280,7 +288,9 @@ function Get-SguGraphEvidence {
                     NoOwners                     = [bool]$record.NoOwners
                     NoMembers                    = [bool]$record.NoMembers
                     ParentGroupCount             = [int]$record.ParentGroupCount
+                    ParentGroupIds               = [string]$record.ParentGroupIds
                     ChildGroupCount              = [int]$record.ChildGroupCount
+                    ChildGroupIds                = [string]$record.ChildGroupIds
                     IsNestedParent               = [bool]$record.IsNestedParent
                     IsNestedChild                = [bool]$record.IsNestedChild
                     DuplicateByName              = $duplicateByName
@@ -611,11 +621,11 @@ function Get-SguGraphEvidence {
             else {
                 $status = 'PartiallyQueryable'
                 $manualHint = switch -Regex ($entry.UsageArea) {
-                    'Insider Risk'   { 'Open Purview compliance portal > Insider Risk Management > Settings > Priority user groups to review group assignments.' }
-                    'SharePoint'     { 'Use SharePoint Admin Center > Active sites and review site permissions per site. PnP PowerShell (Get-PnPGroupPermissions) enables bulk review.' }
-                    'Teams'          { 'Use Teams Admin Center > Users > Manage users, or run Get-CsUserPolicyAssignment in Teams PowerShell to find group-based policy assignments.' }
-                    'Defender'       { 'Review Microsoft Defender XDR unified RBAC under Settings > Microsoft Defender XDR > Roles. For device groups, check Settings > Endpoints > Device groups.' }
-                    default          { 'No automated Graph collector available. Review the workload portal directly or consult documentation for manual validation steps.' }
+                    'Insider Risk' { 'Open Purview compliance portal > Insider Risk Management > Settings > Priority user groups to review group assignments.' }
+                    'SharePoint' { 'Use SharePoint Admin Center > Active sites and review site permissions per site. PnP PowerShell (Get-PnPGroupPermissions) enables bulk review.' }
+                    'Teams' { 'Use Teams Admin Center > Users > Manage users, or run Get-CsUserPolicyAssignment in Teams PowerShell to find group-based policy assignments.' }
+                    'Defender' { 'Review Microsoft Defender XDR unified RBAC under Settings > Microsoft Defender XDR > Roles. For device groups, check Settings > Endpoints > Device groups.' }
+                    default { 'No automated Graph collector available. Review the workload portal directly or consult documentation for manual validation steps.' }
                 }
                 Add-Telemetry -Workload $entry.UsageArea -Endpoint 'n/a' -Start (Get-Date) -ItemCount 0 -Status 'PartiallyQueryable' -ErrorText $manualHint
             }

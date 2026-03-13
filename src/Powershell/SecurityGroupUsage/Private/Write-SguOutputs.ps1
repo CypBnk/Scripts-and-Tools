@@ -292,7 +292,9 @@ function Write-SguOutputs {
                 GroupId          = [string]$_.GroupId
                 GroupDisplayName = [string]$_.GroupDisplayName
                 ParentGroupCount = [int]$_.ParentGroupCount
+                ParentGroupIds   = [string]$_.ParentGroupIds
                 ChildGroupCount  = [int]$_.ChildGroupCount
+                ChildGroupIds    = [string]$_.ChildGroupIds
                 IsNestedChild    = [bool]$_.IsNestedChild
                 IsNestedParent   = [bool]$_.IsNestedParent
             }
