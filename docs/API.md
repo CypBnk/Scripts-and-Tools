@@ -1,102 +1,95 @@
-# API Documentation
+# Script API Documentation
 
 ## Overview
 
-This document describes the API endpoints and functions available in this project.
+This repository is a script collection, not a REST service. This document describes the callable script and module interfaces in the repo.
 
-## Table of Contents
+## PowerShell Interfaces
 
-- [Authentication](#authentication)
-- [Endpoints](#endpoints)
-- [Error Handling](#error-handling)
-- [Examples](#examples)
+### Invoke-SecurityGroupUsageDiscovery
 
-## Authentication
+Module path:
 
-Describe how to authenticate with the API:
+- src/Powershell/SecurityGroupUsage/SecurityGroupUsage.psm1
 
-```bash
-# Example with API key
-curl -H "Authorization: Bearer YOUR_API_KEY" https://api.example.com/endpoint
-```
+Public command:
 
-## Endpoints
+- Invoke-SecurityGroupUsageDiscovery
 
-### GET /api/resource
+Purpose:
 
-Retrieve a resource.
+- Discovers where Entra security groups are used across covered workloads and writes JSON, CSV, Markdown, and HTML outputs.
 
-**Parameters:**
+Key parameters:
 
-- `id` (required): Resource ID
+- OutputPath: Root output directory. Runtime writes to OutputPath/TenantName/YYYY-MM-DD-HH_MM/files.
+- SkipGraph: Skip Graph collection and generate baseline/report structure only.
+- Scopes: Delegated scopes used during Graph collection.
+- AuthMethod: WAM, DeviceCode, or ClientCredentials.
+- TenantId, ClientId, ClientSecret: Used by ClientCredentials mode.
+- PassThru: Returns in-memory objects in addition to writing files.
 
-**Response:**
+Authentication and prerequisites:
 
-```json
-{
-  "id": 1,
-  "name": "Resource Name",
-  "created_at": "2026-01-16T00:00:00Z"
-}
-```
+- Uses Test-SguPrerequisites as fail-fast startup validation.
+- Requires Microsoft.Graph.Authentication 2.34.0 or newer.
 
-### POST /api/resource
+### Get-StaleDevices.ps1
 
-Create a new resource.
+Script path:
 
-**Request Body:**
+- src/Powershell/Intune-MDM-Management/Get-StaleDevices.ps1
 
-```json
-{
-  "name": "New Resource"
-}
-```
+Purpose:
 
-**Response:**
+- Lists stale Entra devices for a day range while excluding Autopilot devices.
 
-```json
-{
-  "id": 2,
-  "name": "New Resource",
-  "created_at": "2026-01-16T00:00:00Z"
-}
-```
+Typical parameters:
 
-## Error Handling
+- MinDays
+- MaxDays
+- CsvPath
+- Scopes
 
-| Status Code | Description           |
-| ----------- | --------------------- |
-| 200         | Success               |
-| 400         | Bad Request           |
-| 401         | Unauthorized          |
-| 404         | Not Found             |
-| 500         | Internal Server Error |
+### Invoke-EntraDeviceCleanup.ps1
 
-## Examples
+Script path:
 
-### Python Example
+- src/Powershell/Intune-MDM-Management/Invoke-EntraDeviceCleanup.ps1
 
-```python
-import requests
+Purpose:
 
-response = requests.get(
-    'https://api.example.com/api/resource',
-    params={'id': 1},
-    headers={'Authorization': 'Bearer YOUR_API_KEY'}
-)
+- Interactive workflow to review and optionally delete stale non-Autopilot devices.
 
-print(response.json())
-```
+### Delete RegKeys.ps1
 
-### JavaScript Example
+Script path:
 
-```javascript
-fetch("https://api.example.com/api/resource?id=1", {
-  method: "GET",
-  headers: {
-    Authorization: "Bearer YOUR_API_KEY",
-  },
-})
-  .then((response) => response.json())
-  .then((data) => console.log(data));
-```
+- src/Powershell/Intune-MDM-Management/Delete RegKeys.ps1
+
+Purpose:
+
+- Local Windows remediation for stale MDM enrollment artifacts and re-enrollment trigger.
+
+## Python Interfaces
+
+Python scripts currently in repository:
+
+- src/Python/Generate Random Emails/Emailatrandom.py
+- src/Python/Generate Random Emails/Emailatrandom_Updated.py
+- src/Python/Generate Random Emails/import logging.py
+
+These are standalone scripts (no package API surface).
+
+## Error Handling Conventions
+
+- PowerShell module/scripts use stop-on-error patterns and explicit validation.
+- SecurityGroupUsage cmdlet throws clear prerequisite/auth errors before collector execution.
+- Interactive scripts provide guidance prompts before high-impact actions.
+
+## Related Docs
+
+- docs/INSTALLATION.md
+- docs/FAQ.md
+- src/Powershell/SecurityGroupUsage/README.md
+- src/Powershell/Intune-MDM-Management/README.md

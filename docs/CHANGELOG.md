@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added SecurityGroupUsage exports: `security-group-hygiene.csv`, `security-group-orphan-candidates.csv`, `security-group-duplicate-candidates.csv`, `security-group-nested-map.csv`, and `security-group-decision-matrix.csv`.
 - Added Decision Matrix enrichment for security groups (`CleanupRecommendation`, `RecommendationReason`, `RequiredValidationStep`, `ValidationOwner`).
 - Added SecurityGroupUsage collectors for Enterprise Applications app role assignments, Intune compliance/configuration profile assignments, and Exchange Online mail-enabled security groups.
+- Added `Test-SguPrerequisites` for fail-fast SecurityGroupUsage startup validation (PowerShell version, Graph module/version, and required Graph commands).
+- Added SecurityGroupUsage authentication mode selection (`WAM`, `DeviceCode`, `ClientCredentials`) with interactive prompt fallback.
 
 ### Changed
 
@@ -26,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed SecurityGroupUsage HTML report layout to include section navigation, summary cards, and risk highlighting for decision matrix rows.
 - Changed SecurityGroupUsage default Graph scope set to include `DeviceManagementConfiguration.Read.All`.
 - Changed SecurityGroupUsage runtime UX to include step-based progress and workload progress indicators.
+- Changed SecurityGroupUsage output folder structure to `<OutputPath>/<TenantName>/YYYY-MM-DD-HH_MM/<files>`.
+- Changed SecurityGroupUsage docs and examples to use `out/SecurityGroupUsage` as the output root and nested tenant/timestamp folders at runtime.
 
 ### Fixed
 
@@ -50,5 +54,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions CI/CD workflows
 - Test frameworks and examples
 
-[Unreleased]: https://github.com/username/PowerScripts/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/username/PowerScripts/releases/tag/v1.0.0
+[Unreleased]: https://github.com/CypBnk/Scripts-and-Tools/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/CypBnk/Scripts-and-Tools/releases/tag/v1.0.0

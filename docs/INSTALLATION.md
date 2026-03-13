@@ -1,6 +1,6 @@
 # Installation Guide
 
-This guide covers setup for all script types in this repository.
+This guide covers setup for the script types currently present in this repository.
 
 ## Prerequisites
 
@@ -11,8 +11,8 @@ This guide covers setup for all script types in this repository.
 ## Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/username/PowerScripts.git
-cd PowerScripts
+git clone https://github.com/CypBnk/Scripts-and-Tools.git
+cd Scripts-and-Tools
 ```
 
 ## Step 2: Install Runtime Environments
@@ -20,7 +20,7 @@ cd PowerScripts
 ### PowerShell Setup (Windows)
 
 ```powershell
-# Check PowerShell version (requires 5.0+)
+# Check PowerShell version
 $PSVersionTable.PSVersion
 
 # Set execution policy to allow scripts
@@ -30,16 +30,21 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 Install-Module Microsoft.Graph -Scope CurrentUser
 ```
 
+Version guidance:
+
+- Intune-MDM-Management scripts: Windows PowerShell 5.1 or PowerShell 7+
+- SecurityGroupUsage module: PowerShell 7+ (with prerequisite validation at startup)
+
 ### Microsoft Graph Permissions for Stale Device Reporting
 
-The `src/Powershell/Get-StaleDevices.ps1` script requires Microsoft Graph delegated permissions:
+The `src/Powershell/Intune-MDM-Management/Get-StaleDevices.ps1` script requires Microsoft Graph delegated permissions:
 
 - `Device.Read.All`
 - `DeviceManagementServiceConfig.Read.All`
 
 When prompted during `Connect-MgGraph`, grant consent for these scopes.
 
-The `src/Powershell/Invoke-EntraDeviceCleanup.ps1` script uses:
+The `src/Powershell/Intune-MDM-Management/Invoke-EntraDeviceCleanup.ps1` script uses:
 
 - Read-only mode: `Device.Read.All`, `DeviceManagementServiceConfig.Read.All`
 - Read+write mode: `Device.Read.All`, `Device.ReadWrite.All`, `DeviceManagementServiceConfig.Read.All`
@@ -53,9 +58,16 @@ The `src/Powershell/SecurityGroupUsage/SecurityGroupUsage.psm1` module uses dele
 - `Policy.Read.All`
 - `RoleManagement.Read.Directory`
 - `DeviceManagementApps.Read.All`
+- `DeviceManagementConfiguration.Read.All`
 - `Application.Read.All`
 
 Grant these scopes when prompted by `Connect-MgGraph`.
+
+SecurityGroupUsage runtime prerequisites:
+
+- PowerShell 7.0 or newer
+- Microsoft Graph PowerShell SDK installed (`Install-Module Microsoft.Graph -Scope CurrentUser`)
+- `Microsoft.Graph.Authentication` 2.34.0 or newer
 
 ### Python Setup
 
@@ -76,29 +88,6 @@ source venv/bin/activate
 if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 ```
 
-### Node.js/JavaScript Setup
-
-```bash
-# Check Node.js installation
-node --version  # Requires 12.0 or higher
-
-# Install dependencies
-cd JS/
-npm install
-# or
-yarn install
-```
-
-### Bash/Shell Setup
-
-```bash
-# Check Bash version (requires 4.0+)
-bash --version
-
-# Make scripts executable
-chmod +x Shell_BASH/*.sh
-```
-
 ## Step 3: Running Scripts
 
 ### Running PowerShell Scripts
@@ -116,17 +105,39 @@ chmod +x Shell_BASH/*.sh
 # Security group usage discovery
 Import-Module .\src\Powershell\SecurityGroupUsage\SecurityGroupUsage.psm1 -Force
 Invoke-SecurityGroupUsageDiscovery
+
+# Optional: explicit authentication mode
+Invoke-SecurityGroupUsageDiscovery -AuthMethod DeviceCode
+
+# Optional: app-only auth
+# $secret = ConvertTo-SecureString "<client-secret>" -AsPlainText -Force
+# Invoke-SecurityGroupUsageDiscovery -AuthMethod ClientCredentials -TenantId "<tenant-id>" -ClientId "<client-id>" -ClientSecret $secret
 ```
+
+SecurityGroupUsage output layout:
+
+`<OutputPath>\<TenantName>\YYYY-MM-DD-HH_MM\<files>`
+
+Example:
+
+`out\SecurityGroupUsage\Contoso Ltd\2026-03-13-21_42\security-group-usage.json`
 
 ### Running Python Scripts
 
 ```bash
-# From the repository root
-python src/Python/script_name.py
-
-# With arguments
-python src/Python/script_name.py --argument value
+# From the repository root (examples)
+python "src/Python/Generate Random Emails/Emailatrandom.py"
+python "src/Python/Generate Random Emails/Emailatrandom_Updated.py"
 ```
+
+## Repository Scope Note
+
+Current source layout includes:
+
+- PowerShell scripts/modules under src/Powershell
+- Python scripts under src/Python
+
+If additional language folders are added later, extend this guide with matching setup steps.
 
 ## Getting Help
 

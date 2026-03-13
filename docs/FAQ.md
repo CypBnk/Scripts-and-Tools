@@ -4,11 +4,11 @@
 
 ### What is this project?
 
-[Brief description of the project and its purpose]
+This repository contains practical automation scripts, currently focused on PowerShell administration workflows and utility Python scripts.
 
 ### Who maintains this project?
 
-This project is maintained by [Your Name/Organization]. See [CONTRIBUTING.md](../CONTRIBUTING.md) for contributor information.
+Maintainer and contributor details are tracked in the repository history. Contribution workflow is documented in [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ### Is this project still actively maintained?
 
@@ -26,13 +26,47 @@ Most features require only standard user permissions. Some advanced features may
 
 ### Can I use this on [specific OS/platform]?
 
-This project supports Windows, macOS, and Linux. Platform-specific instructions are available in the [Installation Guide](INSTALLATION.md).
+PowerShell scripts in this repository are primarily Windows-oriented (especially Intune/Entra workflows). Some script logic can run cross-platform with PowerShell 7+, but Graph auth mode availability and local remediation scripts can be platform-specific.
 
 ## Usage Questions
 
 ### Where can I find usage examples?
 
 Check the [README.md](../README.md) and script-specific help output.
+
+### How do I run Security Group Usage Discovery?
+
+Use the module command:
+
+```powershell
+Import-Module .\src\Powershell\SecurityGroupUsage\SecurityGroupUsage.psm1 -Force
+Invoke-SecurityGroupUsageDiscovery -OutputPath .\out\SecurityGroupUsage
+```
+
+Outputs are written under:
+
+- OutputPath/TenantName/YYYY-MM-DD-HH_MM/files
+
+Example:
+
+- out/SecurityGroupUsage/Contoso Ltd/2026-03-13-21_42/security-group-usage.json
+
+### Which authentication methods are supported in Security Group Usage Discovery?
+
+- WAM
+- DeviceCode
+- ClientCredentials
+
+If AuthMethod is omitted, the command prompts interactively.
+
+### Why does Security Group Usage fail immediately before running collectors?
+
+The module runs prerequisite validation first and fails fast when requirements are missing, such as:
+
+- PowerShell 7+
+- Microsoft Graph SDK not installed
+- Microsoft.Graph.Authentication version below 2.34.0
+- Required Graph commands unavailable after import
 
 ### How do I find stale Entra devices and exclude Autopilot devices?
 
@@ -41,23 +75,23 @@ Use `src/Powershell/Get-StaleDevices.ps1`.
 Example:
 
 ```powershell
-.\src\Powershell\Get-StaleDevices.ps1 -MinDays 60 -MaxDays 3650 -Verbose
+.\src\Powershell\Intune-MDM-Management\Get-StaleDevices.ps1 -MinDays 60 -MaxDays 3650 -Verbose
 ```
 
 Optional CSV export:
 
 ```powershell
-.\src\Powershell\Get-StaleDevices.ps1 -MinDays 90 -MaxDays 365 -CsvPath .\stale-devices.csv
+.\src\Powershell\Intune-MDM-Management\Get-StaleDevices.ps1 -MinDays 90 -MaxDays 365 -CsvPath .\stale-devices.csv
 ```
 
 ### How do I run the interactive Entra cleanup workflow?
 
-Use `src/Powershell/Invoke-EntraDeviceCleanup.ps1`.
+Use `src/Powershell/Intune-MDM-Management/Invoke-EntraDeviceCleanup.ps1`.
 
 Example:
 
 ```powershell
-.\src\Powershell\Invoke-EntraDeviceCleanup.ps1
+.\src\Powershell\Intune-MDM-Management\Invoke-EntraDeviceCleanup.ps1
 ```
 
 The script guides you through authentication, listing, filtering (including a custom threshold), and optional deletion in read+write mode.
@@ -81,7 +115,7 @@ Absolutely! Please use [GitHub Discussions](../../discussions) or open a [featur
 
 ### I found a security vulnerability. What should I do?
 
-Please email security concerns to [your-email@example.com] instead of using the public issue tracker.
+Please follow [SECURITY.md](../SECURITY.md) and avoid posting exploit details in public issues.
 
 ## Contributing
 
@@ -91,7 +125,7 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines on code contributions, 
 
 ### What's the code style?
 
-We follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) for Python and [ESLint](https://eslint.org/) for JavaScript.
+For PowerShell, follow repository and module conventions (parameter validation, clear help text, and safe defaults). For Python, use readable PEP 8-style formatting.
 
 ## License & Legal
 

@@ -61,8 +61,18 @@ Use the standalone module with an internal workload/endpoint catalog and enrich 
 Import-Module .\src\Powershell\SecurityGroupUsage\SecurityGroupUsage.psm1 -Force
 
 Invoke-SecurityGroupUsageDiscovery `
-    -OutputPath .\out\SecurityGroupUsage\latest
+    -OutputPath .\out\SecurityGroupUsage
 ```
+
+Output files are written under:
+
+`<OutputPath>\<TenantName>\YYYY-MM-DD-HH_MM\`
+
+Authentication modes:
+
+- Interactive WAM
+- Device code flow
+- Client credentials (`TenantId`, `ClientId`, `ClientSecret`)
 
 Default output artifacts:
 
