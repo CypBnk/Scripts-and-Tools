@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Releases]
+
+### Added (Releases)
+- Added standalone release elements `releases/SecurityGroupUsage.zip` and `releases/SecurityGroupUsage-RELEASE-v0.5.0-beta.1.md` for `SecurityGroupUsage` `v0.5.0-beta.1`.
+
 ## [Unreleased]
 
 ### Added (Unreleased)
@@ -19,7 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added SecurityGroupUsage collectors for Enterprise Applications app role assignments, Intune compliance/configuration profile assignments, and Exchange Online mail-enabled security groups.
 - Added `Test-SguPrerequisites` for fail-fast SecurityGroupUsage startup validation (PowerShell version, Graph module/version, and required Graph commands).
 - Added SecurityGroupUsage authentication mode selection (`WAM`, `DeviceCode`, `ClientCredentials`) with interactive prompt fallback.
-- Added standalone release elements `releases/SecurityGroupUsage.zip` and `releases/SecurityGroupUsage-RELEASE-v0.5.0-beta.1.md` for `SecurityGroupUsage` `v0.5.0-beta.1`.
 
 ### Changed
 
