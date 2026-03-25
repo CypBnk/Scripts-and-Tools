@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added SecurityGroupUsage collectors for Enterprise Applications app role assignments, Intune compliance/configuration profile assignments, and Exchange Online mail-enabled security groups.
 - Added `Test-SguPrerequisites` for fail-fast SecurityGroupUsage startup validation (PowerShell version, Graph module/version, and required Graph commands).
 - Added SecurityGroupUsage authentication mode selection (`WAM`, `DeviceCode`, `ClientCredentials`) with interactive prompt fallback.
+- Added standalone release elements `releases/SecurityGroupUsage.zip` and `releases/SecurityGroupUsage-RELEASE-v0.5.0-beta.1.md` for `SecurityGroupUsage` `v0.5.0-beta.1`.
 
 ### Changed
 
@@ -32,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed SecurityGroupUsage enterprise app collection to show nested per-service-principal progress and verbose diagnostics (`Write-Progress` + `Write-Verbose`).
 - Changed SecurityGroupUsage docs and examples to use `out/SecurityGroupUsage` as the output root and nested tenant/timestamp folders at runtime.
 - Changed SecurityGroupUsage documentation in module README, API docs, and FAQ to include quick no-auth smoke testing and current output/coverage details.
+- Changed `src/Powershell/SecurityGroupUsage/README.md` to a standalone zip-first quick start so the module can be run directly from the extracted release folder.
 
 ### Fixed
 
