@@ -198,6 +198,7 @@ The sync script uses a robust connection strategy for on-premises Exchange with 
    - Ensures maximum compatibility with different Exchange versions
 
 **Why Basic Authentication?**
+
 - Works reliably across domain boundaries (local, trusted domains, and untrusted domains)
 - No dependency on Kerberos configuration or constrained delegation
 - No issues with cross-forest or cross-domain scenarios
