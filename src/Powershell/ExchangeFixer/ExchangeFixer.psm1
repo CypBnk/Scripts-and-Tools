@@ -12,7 +12,6 @@ $PrivateFunctions = @(
     'Connect-EXOSession',
     'Connect-OnPremExchangeSession',
     'Connect-ADSession',
-    'Initialize-RemoteExchange',
     'Get-EXOMailboxesWithArchive',
     'Get-OnPremMailboxes',
     'Match-OnPremMailbox',
