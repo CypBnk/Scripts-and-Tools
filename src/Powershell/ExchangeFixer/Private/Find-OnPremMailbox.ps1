@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Matches an Exchange Online mailbox to its on-premises counterpart.
+    Finds an Exchange Online mailbox's matching on-premises counterpart.
 
 .DESCRIPTION
     Matches mailboxes using a priority-based strategy:
@@ -18,10 +18,10 @@
     [PSCustomObject] Matched on-premises mailbox, or $null if no match found
 
 .EXAMPLE
-    $OnPremMailbox = Match-OnPremMailbox -ExoMailbox $ExoMbx -OnPremMailboxes $OnPremMbxes
+    $OnPremMailbox = Find-OnPremMailbox -ExoMailbox $ExoMbx -OnPremMailboxes $OnPremMbxes
     # Returns matching on-premises mailbox or $null
 #>
-function Match-OnPremMailbox {
+function Find-OnPremMailbox {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -63,10 +63,12 @@ function Match-OnPremMailbox {
             }
         }
 
+        # No match found
         Write-Verbose -Message "No matching on-premises mailbox found for EXO mailbox: $($ExoMailbox.UserPrincipalName)"
         return $null
     }
     catch {
-        throw "Error matching mailbox: $_"
+        Write-Warning -Message "Error matching EXO mailbox to on-premises: $_"
+        return $null
     }
 }

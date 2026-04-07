@@ -35,6 +35,18 @@ function Connect-ADSession {
         return $true
     }
     catch {
+        $ErrorMessage = $_
+        
+        # Check if this is a non-domain-joined machine error
+        if ($ErrorMessage -match "not associated with an Active Directory domain|Current security context is not associated") {
+            Write-Warning -Message "This computer is not joined to an Active Directory domain or the current security context has no AD access."
+            Write-Warning -Message "AD writes (msExchArchiveGUID attribute) will be skipped. Only on-premises Exchange will be updated."
+            Write-Warning -Message "To use full functionality, run this script from a domain-joined computer with domain credentials."
+            
+            # Return $true anyway so sync can continue with Exchange-only writes
+            return $true
+        }
+        
         throw "Failed to connect to Active Directory: $_"
     }
 }

@@ -99,7 +99,7 @@ function Invoke-ArchiveGuidSync {
 
             try {
                 # Match to on-premises mailbox
-                $OnPremMailbox = Match-OnPremMailbox -ExoMailbox $ExoMailbox -OnPremMailboxes $OnPremMailboxes
+                $OnPremMailbox = Find-OnPremMailbox -ExoMailbox $ExoMailbox -OnPremMailboxes $OnPremMailboxes
 
                 if (-not $OnPremMailbox) {
                     Write-Verbose -Message "SKIPPED: No matching on-premises mailbox for $($ExoMailbox.UserPrincipalName)"

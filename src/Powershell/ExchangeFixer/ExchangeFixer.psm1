@@ -15,7 +15,7 @@ $PrivateFunctions = @(
     'Connect-ADSession',
     'Get-EXOMailboxesWithArchive',
     'Get-OnPremMailboxes',
-    'Match-OnPremMailbox',
+    'Find-OnPremMailbox',
     'Sync-ArchiveGuidToOnPrem',
     'Invoke-ArchiveGuidSync',
     'Write-SyncReport'
