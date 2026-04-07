@@ -91,17 +91,32 @@ function Sync-ArchiveGuidFromEXO {
 
     process {
         try {
+            # Check critical prerequisites before proceeding
+            Write-Host "`nChecking critical prerequisites..." -ForegroundColor Yellow
+            $PrereqPassed = Test-Prerequisites
+            
+            if (-not $PrereqPassed) {
+                Write-Host "`nWarning: Some prerequisites are missing. The sync may fail. Install missing components:" -ForegroundColor Yellow
+                Write-Host "  - ActiveDirectory module: Add-WindowsCapability -Online -Name Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0" -ForegroundColor Gray
+                Write-Host "  - Enable-PSRemoting: Run 'Enable-PSRemoting -Force' with administrator privileges" -ForegroundColor Gray
+                $Confirmation = Read-Host "Continue anyway? (Y/N)"
+                if ($Confirmation -ne 'Y' -and $Confirmation -ne 'y') {
+                    Write-Host "Sync cancelled by user" -ForegroundColor Yellow
+                    return $null
+                }
+            }
+
             # Validate on-premises server is reachable before proceeding
-            Write-Host "Validating on-premises Exchange server connectivity..."
+            Write-Host "`nValidating on-premises Exchange server connectivity..." -ForegroundColor Yellow
             $TestConnection = Test-NetConnection -ComputerName $OnPremExchangeServer -Port 5985 -WarningAction SilentlyContinue -InformationAction SilentlyContinue
             if (-not $TestConnection.TcpTestSucceeded) {
                 throw "Cannot reach Exchange server $OnPremExchangeServer on port 5985 (WinRM). Verify FQDN and network connectivity."
             }
-            Write-Host "[OK] Server connectivity verified"
+            Write-Host "[OK] Server connectivity verified" -ForegroundColor Green
 
             # Confirm action if not SilentlyContinue
             if ($PSCmdlet.ShouldProcess("ArchiveGUID sync from EXO to $OnPremExchangeServer", "Execute")) {
-                Write-Host "Starting ArchiveGUID synchronization..." -ForegroundColor Cyan
+                Write-Host "`nStarting ArchiveGUID synchronization..." -ForegroundColor Cyan
 
                 # Call orchestration function with credential if provided
                 $InvokeParams = @{
