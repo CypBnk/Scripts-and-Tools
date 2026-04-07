@@ -75,7 +75,7 @@ function Connect-OnPremExchangeSession {
         
         Write-Verbose -Message "Remote session created, importing Exchange commands..."
         
-        Import-PSSession $Session -ErrorAction Stop | Out-Null
+        Import-PSSession $Session -AllowClobber -ErrorAction Stop | Out-Null
 
         Write-Verbose -Message "Successfully connected and imported Exchange commands from $ExchangeServer"
         return $Session
