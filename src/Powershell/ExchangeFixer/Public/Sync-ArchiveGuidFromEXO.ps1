@@ -10,12 +10,17 @@
     and writes them to both on-premises AD and Exchange for each matched mailbox.
 
 .PARAMETER OnPremExchangeServer
-    Mandatory. FQDN of the on-premises Exchange Server to connect to.
-    Example: 'exchange.contoso.com' or 'exch01.corp.local'
+    Mandatory. FQDN or NetBIOS name of the on-premises Exchange Server to connect to.
+    Example: 'exchange.contoso.com' or 'exch01'
 
 .PARAMETER OutputPath
     Optional. Path where the sync report CSV will be saved.
     Default: .\ArchiveGuidSync_YYYYMMdd_HHmmss.csv in the current directory
+
+.PARAMETER Credential
+    Optional. PSCredential object for on-premises Exchange connection if current user lacks permissions.
+    If not provided, uses current user's identity.
+    Example: -Credential (Get-Credential)
 
 .PARAMETER WhatIf
     Shows what would be synced without making actual changes.
@@ -28,12 +33,23 @@
 
 .EXAMPLE
     Sync-ArchiveGuidFromEXO -OnPremExchangeServer 'exchange.contoso.com'
+    # Uses current user credentials
+
+.EXAMPLE
+    Sync-ArchiveGuidFromEXO -OnPremExchangeServer 'exchange.contoso.com' -Credential (Get-Credential) -Verbose
+    # Uses specified credentials with verbose output
 
 .EXAMPLE
     Sync-ArchiveGuidFromEXO -OnPremExchangeServer 'exchange.contoso.com' -WhatIf -Verbose
+    # Preview mode: shows what would be synced without making changes
 
 .NOTES
-    Requires Exchange Online Management Module and Active Directory module (RSAT).
+    Requires: 
+    - Exchange Online Management Module (v2.0.5+)
+    - Active Directory module (RSAT)
+    - Exchange Online Administrator role
+    - Exchange Server Administrator role (on-premises)
+    - Active Directory Domain Administrator or equivalent
 #>
 function Sync-ArchiveGuidFromEXO {
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
@@ -45,7 +61,11 @@ function Sync-ArchiveGuidFromEXO {
 
         [Parameter(Mandatory = $false)]
         [string]
-        $OutputPath = ""
+        $OutputPath = "",
+
+        [Parameter(Mandatory = $false)]
+        [PSCredential]
+        $Credential
     )
 
     begin {
@@ -58,6 +78,12 @@ function Sync-ArchiveGuidFromEXO {
         Write-Verbose -Message "Sync-ArchiveGuidFromEXO starting..."
         Write-Verbose -Message "On-Premises Exchange Server: $OnPremExchangeServer"
         Write-Verbose -Message "Output Path: $OutputPath"
+        if ($PSBoundParameters.ContainsKey('Credential')) {
+            Write-Verbose -Message "Using alternative credentials for on-premises connection"
+        }
+        else {
+            Write-Verbose -Message "Using current user identity for on-premises connection"
+        }
         if ($WhatIfPreference) {
             Write-Verbose -Message "WhatIf mode: No changes will be made"
         }
@@ -77,11 +103,19 @@ function Sync-ArchiveGuidFromEXO {
             if ($PSCmdlet.ShouldProcess("ArchiveGUID sync from EXO to $OnPremExchangeServer", "Execute")) {
                 Write-Host "Starting ArchiveGUID synchronization..." -ForegroundColor Cyan
 
-                # Call orchestration function
-                $Results = Invoke-ArchiveGuidSync -ExchangeServer $OnPremExchangeServer `
-                    -OutputPath $OutputPath `
-                    -WhatIf:$WhatIfPreference `
-                    -Verbose:$VerbosePreference
+                # Call orchestration function with credential if provided
+                $InvokeParams = @{
+                    ExchangeServer = $OnPremExchangeServer
+                    OutputPath     = $OutputPath
+                    WhatIf         = $WhatIfPreference
+                    Verbose        = $VerbosePreference
+                }
+
+                if ($PSBoundParameters.ContainsKey('Credential')) {
+                    $InvokeParams['Credential'] = $Credential
+                }
+
+                $Results = Invoke-ArchiveGuidSync @InvokeParams
 
                 Write-Host "[OK] Sync completed successfully" -ForegroundColor Green
                 return $Results

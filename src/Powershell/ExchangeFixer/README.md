@@ -260,6 +260,95 @@ Install-Module -Name ExchangeOnlineManagement -Scope CurrentUser
 2. Run PowerShell as Administrator
 3. Run from a domain-joined computer
 
+### "Access is denied" - On-Premises Exchange Connection
+
+**Problem:** Permission denied when connecting to on-premises Exchange server.
+
+**Root Causes:**
+
+- Current user lacks Exchange Administrator permissions
+- Kerberos authentication fails due to delegation configuration
+- User account hasn't been added to appropriate Exchange Server role groups
+- WinRM isn't properly configured on Exchange server
+
+**Solutions:**
+
+#### Option 1: Add Current User to Exchange Administrators (Recommended)
+
+If your user account should have permissions, add it to the Organization Management role group:
+
+```powershell
+# Run on Exchange server as Administrator
+Add-RoleGroupMember -Identity "Organization Management" `
+    -Member (Get-User -Identity "domain\username").Identity
+```
+
+Then sign out and sign back in for changes to take effect.
+
+#### Option 2: Use Alternate Credentials (Temporary Workaround)
+
+Use the `-Credential` parameter to provide an Exchange administrator account:
+
+```powershell
+# Method 1: Interactive credential prompt
+Sync-ArchiveGuidFromEXO -OnPremExchangeServer 'exchange.corp.com' `
+    -Credential (Get-Credential)
+
+# Method 2: Specify domain\username explicitly (will prompt for password)
+$Cred = Get-Credential -UserName 'CONTOSO\ExchangeAdmin'
+Sync-ArchiveGuidFromEXO -OnPremExchangeServer 'exchange.corp.com' `
+    -Credential $Cred
+
+# Method 3: Store as variable for reuse
+$ExchangeAdmin = Get-Credential
+Sync-ArchiveGuidFromEXO -OnPremExchangeServer 'exchange.corp.com' -Credential $ExchangeAdmin -Verbose
+```
+
+#### Option 3: Verify WinRM Configuration
+
+Ensure WinRM is properly configured on the Exchange server:
+
+```powershell
+# Run on Exchange server as Administrator
+winrm quickconfig
+
+# Verify Microsoft.Exchange configuration exists
+Get-PSSessionConfiguration -Name Microsoft.Exchange -ErrorAction SilentlyContinue
+
+# If not found, reconfigure Exchange:
+."$env:ExchangeInstallPath\bin\RemoteExchange.ps1"
+```
+
+#### Option 4: Check Kerberos/Delegation
+
+For cross-domain or service account scenarios:
+
+```powershell
+# Test Kerberos ticket
+kinit -A domain\username
+
+# Verify constrained delegation is configured from your computer to Exchange server
+# (This requires domain admin; check with your AD admin)
+```
+
+#### Option 5: Debug with Verbose Output
+
+Use `-Verbose` flag to see detailed connection attempt information:
+
+```powershell
+Sync-ArchiveGuidFromEXO -OnPremExchangeServer 'exchange.corp.com' `
+    -Credential (Get-Credential) `
+    -Verbose `
+    | Out-Host
+```
+
+This shows:
+
+- Connectivity test results
+- Authentication method attempts
+- RemoteExchange.ps1 fallback attempts
+- Detailed error messages at each stage
+
 ### "Set-Mailbox failed: The RPC endpoint is offline"
 
 **Problem:** On-premises Exchange server is unavailable or overloaded.

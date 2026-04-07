@@ -19,6 +19,9 @@
 .PARAMETER OutputPath
     Path where the sync report CSV will be saved
 
+.PARAMETER Credential
+    Optional. PSCredential for on-premises Exchange connection if current user lacks permissions
+
 .PARAMETER WhatIf
     If specified, performs all operations in read-only mode (no actual writes)
 
@@ -39,6 +42,10 @@ function Invoke-ArchiveGuidSync {
         [string]
         $OutputPath,
 
+        [Parameter(Mandatory = $false)]
+        [PSCredential]
+        $Credential,
+
         [switch]
         $WhatIf
     )
@@ -57,7 +64,14 @@ function Invoke-ArchiveGuidSync {
         Connect-EXOSession | Out-Null
         Write-Verbose -Message "Connected to Exchange Online"
 
-        $ExchangeSession = Connect-OnPremExchangeSession -ExchangeServer $ExchangeServer
+        $ConnectParams = @{
+            ExchangeServer = $ExchangeServer
+        }
+        if ($PSBoundParameters.ContainsKey('Credential')) {
+            $ConnectParams['Credential'] = $Credential
+        }
+        
+        $ExchangeSession = Connect-OnPremExchangeSession @ConnectParams
         Write-Verbose -Message "Connected to on-premises Exchange: $ExchangeServer"
 
         Connect-ADSession | Out-Null
