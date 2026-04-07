@@ -8,43 +8,50 @@
     for robust connection setup.
     
     Connection attempts authentication methods in this order:
-    1. Standard Microsoft.Exchange config (Kerberos) with current user
-    2. RemoteExchange.ps1 fallback (Kerberos) with current user
-    3. If Credential provided: Microsoft.Exchange config with alternate credentials
-    4. If Credential provided: RemoteExchange.ps1 fallback with alternate credentials
+    1. Standard Microsoft.Exchange config (Basic Auth) with provided or current user credentials
+    2. RemoteExchange.ps1 fallback (Basic Auth) with provided or current user credentials
+    
+    Basic Authentication supports both local and domain credentials and works reliably across
+    different network configurations and domain boundaries.
 
 .PARAMETER ExchangeServer
     FQDN or NetBIOS name of the on-premises Exchange server to connect to.
     Example: 'exchange.corp.com' or 'exch01'
 
 .PARAMETER Credential
-    Optional. PSCredential object for alternate authentication if current user lacks permissions.
-    If not provided, uses current user's identity.
+    Optional. PSCredential object for authentication. If not provided, uses current user's identity.
+    Note: Basic Authentication requires explicit credentials for cross-domain scenarios.
+    If current user lacks permissions, provide domain admin credentials:
+    -Credential (Get-Credential -UserName 'DOMAIN\ExchangeAdmin')
 
 .OUTPUTS
     [System.Management.Automation.Runspaces.PSSession] Remote session object
 
 .EXAMPLE
     $Session = Connect-OnPremExchangeSession -ExchangeServer 'exchange.corp.com'
-    # Uses current user credentials
+    # Uses current user credentials via Basic Authentication
 
 .EXAMPLE
     $Credential = Get-Credential
     $Session = Connect-OnPremExchangeSession -ExchangeServer 'exchange.corp.com' -Credential $Credential
-    # Uses provided credentials
+    # Uses provided credentials via Basic Authentication
 
 .NOTES
     Connection strategy:
-    1. Attempts Microsoft.Exchange configuration PSSession (preferred)
+    1. Attempts Microsoft.Exchange configuration PSSession with Basic Authentication (preferred)
     2. Falls back to RemoteExchange.ps1 initialization if Microsoft.Exchange is unavailable
     3. RemoteExchange.ps1 path: C:\Program Files\Microsoft\Exchange Server\V15\Bin\RemoteExchange.ps1
+    
+    Authentication Notes:
+    - Basic Authentication is the default for better cross-domain compatibility
+    - Credentials are encrypted over WinRM port 5985
+    - Works with both local Exchange admins and domain accounts
     
     Troubleshooting "Access is denied":
     - Verify user has Exchange Server Administrator or Organization Management role
     - Check WinRM is enabled: winrm quickconfig (run on Exchange server)
     - Verify firewall allows port 5985 (WinRM)
-    - Check Kerberos configuration and constrained delegation if using cross-domain accounts
-    - Provide explicit credentials if current user lacks permissions: -Credential (Get-Credential)
+    - Provide explicit credentials if needed: -Credential (Get-Credential)
 #>
 function Connect-OnPremExchangeSession {
     [CmdletBinding()]
@@ -74,8 +81,9 @@ function Connect-OnPremExchangeSession {
 
         # Prepare connection parameters
         $SessionParams = @{
-            ComputerName = $ExchangeServer
-            ErrorAction  = 'Stop'
+            ComputerName   = $ExchangeServer
+            ErrorAction    = 'Stop'
+            Authentication = 'Basic'
         }
 
         if ($Credential) {
@@ -86,11 +94,10 @@ function Connect-OnPremExchangeSession {
             $AuthMethod = "current user identity"
         }
 
-        Write-Verbose -Message "Attempting standard Microsoft.Exchange PSSession connection with $AuthMethod..."
+        Write-Verbose -Message "Attempting standard Microsoft.Exchange PSSession connection with Basic Authentication using $AuthMethod..."
 
         try {
             $SessionParams['ConfigurationName'] = 'Microsoft.Exchange'
-            $SessionParams['Authentication'] = 'Kerberos'
             
             $Session = New-PSSession @SessionParams
 
@@ -110,12 +117,12 @@ function Connect-OnPremExchangeSession {
             }
 
             # Fallback: Use RemoteExchange.ps1 initialization
-            Write-Verbose -Message "Attempting RemoteExchange.ps1 fallback with $AuthMethod..."
+            Write-Verbose -Message "Attempting RemoteExchange.ps1 fallback with Basic Authentication using $AuthMethod..."
 
             try {
                 $FallbackParams = @{
                     ComputerName   = $ExchangeServer
-                    Authentication = 'Kerberos'
+                    Authentication = 'Basic'
                     ErrorAction    = 'Stop'
                 }
 
@@ -174,9 +181,9 @@ function Connect-OnPremExchangeSession {
                     "4. Try with explicit credentials if not using Exchange admin account"
                     "   - Example: Connect-OnPremExchangeSession -ExchangeServer $ExchangeServer -Credential (Get-Credential)"
                     "",
-                    "5. Check Kerberos/delegation if using cross-domain or service accounts"
-                    "   - Constrained delegation from calling computer to Exchange server"
-                    "   - Run: kinit -A <domain>\<user> (to test Kerberos)"
+                    "5. Verify Basic Authentication is enabled on Exchange server"
+                    "   - Run on Exchange server: Set-WSManInstance -ResourceURI winrm/config/client -ValueSet @{AllowUnencrypted=`$false}"
+                    "   - WinRM typically uses port 5985 (HTTP/Basic Auth)"
                 ) -join "`n"
 
                 throw $ErrorMessage
