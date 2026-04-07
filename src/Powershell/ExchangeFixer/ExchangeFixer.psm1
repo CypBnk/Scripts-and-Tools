@@ -46,8 +46,17 @@ foreach ($FunctionName in $PublicFunctions) {
     }
 }
 
-# Run prerequisite check on module load
+# Run prerequisite check on module load and cache result (do not re-test during sync)
 $PrereqCheckPassed = Test-Prerequisites
+$script:PrereqCheckCached = $PrereqCheckPassed
+
+# Discover current domain for AD operations (to be used if -ADDomainController not specified)
+try {
+    $script:DefaultDomainController = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().PdcRoleOwner.Name
+}
+catch {
+    $script:DefaultDomainController = $null
+}
 
 # Export only the public functions
 Export-ModuleMember -Function $PublicFunctions

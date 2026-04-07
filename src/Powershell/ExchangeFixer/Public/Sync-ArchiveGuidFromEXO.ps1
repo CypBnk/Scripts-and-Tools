@@ -9,12 +9,27 @@
     The script matches mailboxes by SAM/UPN first, retrieves ArchiveGUIDs from EXO,
     and writes them to both on-premises AD and Exchange for each matched mailbox.
 
+    When invoked without parameters, displays an interactive menu to choose between full sync
+    and single-user test mode.
+
 .PARAMETER OnPremExchangeServer
-    Mandatory. FQDN or NetBIOS name of the on-premises Exchange Server to connect to.
+    Optional. FQDN or NetBIOS name of the on-premises Exchange Server to connect to.
     Example: 'exchange.contoso.com' or 'exch01'
+    If omitted, displays interactive menu.
+
+.PARAMETER ADDomainController
+    Optional. FQDN of specific domain controller to use for AD operations.
+    If not specified, auto-discovers the PDC emulator of the current domain.
+    Example: 'dc1.contoso.com'
+
+.PARAMETER TestUser
+    Optional. SAM account name or UPN of a single user to validate in end-to-end test mode.
+    When specified, performs full sync pipeline (EXO→AD→on-prem) for only that user.
+    Results displayed to console; no CSV report generated.
+    Example: -TestUser 'jsmith' or -TestUser 'jsmith@contoso.com'
 
 .PARAMETER OutputPath
-    Optional. Path where the sync report CSV will be saved.
+    Optional. Path where the sync report CSV will be saved (ignored in test mode).
     Default: .\ArchiveGuidSync_YYYYMMdd_HHmmss.csv in the current directory
 
 .PARAMETER Credential
@@ -29,15 +44,23 @@
     Displays detailed output about connections and sync progress.
 
 .OUTPUTS
-    None. Results are written to the report CSV file and console.
+    None. Results are written to the report CSV file (full sync) or console (test mode).
+
+.EXAMPLE
+    Sync-ArchiveGuidFromEXO
+    # Displays interactive menu for options
 
 .EXAMPLE
     Sync-ArchiveGuidFromEXO -OnPremExchangeServer 'exchange.contoso.com'
-    # Uses current user credentials
+    # Full sync with current user credentials and auto-discovered domain controller
 
 .EXAMPLE
-    Sync-ArchiveGuidFromEXO -OnPremExchangeServer 'exchange.contoso.com' -Credential (Get-Credential) -Verbose
-    # Uses specified credentials with verbose output
+    Sync-ArchiveGuidFromEXO -OnPremExchangeServer 'exchange.contoso.com' -ADDomainController 'dc1.contoso.com' -Verbose
+    # Full sync using specific domain controller with verbose output
+
+.EXAMPLE
+    Sync-ArchiveGuidFromEXO -OnPremExchangeServer 'exchange.contoso.com' -TestUser 'jsmith' -Verbose
+    # End-to-end validation for single user with console output
 
 .EXAMPLE
     Sync-ArchiveGuidFromEXO -OnPremExchangeServer 'exchange.contoso.com' -WhatIf -Verbose
@@ -54,10 +77,18 @@
 function Sync-ArchiveGuidFromEXO {
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
     param(
-        [Parameter(Mandatory = $true, Position = 0)]
+        [Parameter(Mandatory = $false, Position = 0)]
         [ValidateNotNullOrEmpty()]
         [string]
-        $OnPremExchangeServer,
+        $OnPremExchangeServer = "",
+
+        [Parameter(Mandatory = $false)]
+        [string]
+        $ADDomainController = $null,
+
+        [Parameter(Mandatory = $false)]
+        [string]
+        $TestUser = $null,
 
         [Parameter(Mandatory = $false)]
         [string]
@@ -69,6 +100,17 @@ function Sync-ArchiveGuidFromEXO {
     )
 
     begin {
+        # Resolve domain controller if not specified
+        if ([string]::IsNullOrWhiteSpace($ADDomainController)) {
+            $ADDomainController = $script:DefaultDomainController
+            if ($ADDomainController) {
+                Write-Verbose -Message "Using discovered domain controller: $ADDomainController"
+            }
+        }
+        else {
+            Write-Verbose -Message "Using specified domain controller: $ADDomainController"
+        }
+
         # Generate default output path if not provided
         if ([string]::IsNullOrWhiteSpace($OutputPath)) {
             $Timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
@@ -76,7 +118,11 @@ function Sync-ArchiveGuidFromEXO {
         }
 
         Write-Verbose -Message "Sync-ArchiveGuidFromEXO starting..."
+        if ($TestUser) {
+            Write-Verbose -Message "Test Mode: Single user validation for: $TestUser"
+        }
         Write-Verbose -Message "On-Premises Exchange Server: $OnPremExchangeServer"
+        Write-Verbose -Message "Domain Controller: $ADDomainController"
         Write-Verbose -Message "Output Path: $OutputPath"
         if ($PSBoundParameters.ContainsKey('Credential')) {
             Write-Verbose -Message "Using alternative credentials for on-premises connection"
@@ -91,11 +137,55 @@ function Sync-ArchiveGuidFromEXO {
 
     process {
         try {
-            # Check critical prerequisites before proceeding
-            Write-Host "`nChecking critical prerequisites..." -ForegroundColor Yellow
-            $PrereqPassed = Test-Prerequisites
-            
-            if (-not $PrereqPassed) {
+            # Show interactive menu if no parameters provided
+            if ([string]::IsNullOrWhiteSpace($OnPremExchangeServer)) {
+                Write-Host "`n=== ArchiveGUID Synchronization Menu ===" -ForegroundColor Cyan
+                Write-Host "1. Full synchronization (all EXO mailboxes with archives)" -ForegroundColor Gray
+                Write-Host "2. Test single user (end-to-end validation)" -ForegroundColor Gray
+                Write-Host "3. Exit" -ForegroundColor Gray
+                $MenuChoice = Read-Host "`nSelect option (1-3)"
+
+                switch ($MenuChoice) {
+                    "1" {
+                        $OnPremExchangeServer = Read-Host "Enter on-premises Exchange server FQDN"
+                        if ([string]::IsNullOrWhiteSpace($OnPremExchangeServer)) {
+                            throw "Exchange server name cannot be empty"
+                        }
+                        $InputDC = Read-Host "Enter domain controller FQDN (press Enter for auto-discovery)"
+                        if (-not [string]::IsNullOrWhiteSpace($InputDC)) {
+                            $ADDomainController = $InputDC
+                        }
+                        Write-Verbose -Message "Menu selection: Full sync mode"
+                    }
+                    "2" {
+                        $OnPremExchangeServer = Read-Host "Enter on-premises Exchange server FQDN"
+                        if ([string]::IsNullOrWhiteSpace($OnPremExchangeServer)) {
+                            throw "Exchange server name cannot be empty"
+                        }
+                        $TestUser = Read-Host "Enter username to test (SAM or UPN)"
+                        if ([string]::IsNullOrWhiteSpace($TestUser)) {
+                            throw "Username cannot be empty"
+                        }
+                        $InputDC = Read-Host "Enter domain controller FQDN (press Enter for auto-discovery)"
+                        if (-not [string]::IsNullOrWhiteSpace($InputDC)) {
+                            $ADDomainController = $InputDC
+                        }
+                        Write-Verbose -Message "Menu selection: Single user test mode for user: $TestUser"
+                    }
+                    "3" {
+                        Write-Host "Exiting..." -ForegroundColor Yellow
+                        return $null
+                    }
+                    default {
+                        throw "Invalid selection. Please choose 1, 2, or 3."
+                    }
+                }
+                Write-Host ""
+            }
+
+            # Use cached prerequisite check result (tested only on module import)
+            Write-Host "`nUsing cached prerequisite check from module load..." -ForegroundColor Yellow
+            if (-not $script:PrereqCheckCached) {
                 Write-Host "`nWarning: Some prerequisites are missing. The sync may fail. Install missing components:" -ForegroundColor Yellow
                 Write-Host "  - ActiveDirectory module: Add-WindowsCapability -Online -Name Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0" -ForegroundColor Gray
                 Write-Host "  - Enable-PSRemoting: Run 'Enable-PSRemoting -Force' with administrator privileges" -ForegroundColor Gray
@@ -104,6 +194,9 @@ function Sync-ArchiveGuidFromEXO {
                     Write-Host "Sync cancelled by user" -ForegroundColor Yellow
                     return $null
                 }
+            }
+            else {
+                Write-Host "[OK] Prerequisites cached from module load" -ForegroundColor Green
             }
 
             # Validate on-premises server is reachable before proceeding
@@ -115,19 +208,25 @@ function Sync-ArchiveGuidFromEXO {
             Write-Host "[OK] Server connectivity verified" -ForegroundColor Green
 
             # Confirm action if not SilentlyContinue
-            if ($PSCmdlet.ShouldProcess("ArchiveGUID sync from EXO to $OnPremExchangeServer", "Execute")) {
+            $OperationType = if ($TestUser) { "single user test for $TestUser" } else { "full ArchiveGUID sync" }
+            if ($PSCmdlet.ShouldProcess("$OperationType on $OnPremExchangeServer", "Execute")) {
                 Write-Host "`nStarting ArchiveGUID synchronization..." -ForegroundColor Cyan
 
                 # Call orchestration function with credential if provided
                 $InvokeParams = @{
-                    ExchangeServer = $OnPremExchangeServer
-                    OutputPath     = $OutputPath
-                    WhatIf         = $WhatIfPreference
-                    Verbose        = $VerbosePreference
+                    ExchangeServer     = $OnPremExchangeServer
+                    OutputPath         = $OutputPath
+                    ADDomainController = $ADDomainController
+                    WhatIf             = $WhatIfPreference
+                    Verbose            = $VerbosePreference
                 }
 
                 if ($PSBoundParameters.ContainsKey('Credential')) {
                     $InvokeParams['Credential'] = $Credential
+                }
+
+                if ($TestUser) {
+                    $InvokeParams['TestUser'] = $TestUser
                 }
 
                 $Results = Invoke-ArchiveGuidSync @InvokeParams

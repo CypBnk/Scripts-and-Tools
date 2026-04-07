@@ -43,6 +43,14 @@ function Invoke-ArchiveGuidSync {
         $OutputPath,
 
         [Parameter(Mandatory = $false)]
+        [string]
+        $ADDomainController = $null,
+
+        [Parameter(Mandatory = $false)]
+        [string]
+        $TestUser = $null,
+
+        [Parameter(Mandatory = $false)]
         [PSCredential]
         $Credential,
 
@@ -74,7 +82,11 @@ function Invoke-ArchiveGuidSync {
         $ExchangeSession = Connect-OnPremExchangeSession @ConnectParams
         Write-Verbose -Message "Connected to on-premises Exchange: $ExchangeServer"
 
-        Connect-ADSession | Out-Null
+        $ADParams = @{}
+        if ($ADDomainController) {
+            $ADParams['DomainController'] = $ADDomainController
+        }
+        Connect-ADSession @ADParams | Out-Null
         Write-Verbose -Message "Connected to on-premises Active Directory"
 
         # Step 2: Retrieve mailboxes
@@ -82,6 +94,21 @@ function Invoke-ArchiveGuidSync {
 
         $ExoMailboxes = Get-EXOMailboxesWithArchive
         $OnPremMailboxes = Get-OnPremMailboxes -ExchangeSession $ExchangeSession
+
+        # Filter to test user if specified
+        if ($TestUser) {
+            Write-Verbose -Message "Test mode: Filtering for user: $TestUser"
+            $ExoMailboxes = @($ExoMailboxes | Where-Object {
+                    $_.SamAccountName -eq $TestUser -or 
+                    $_.UserPrincipalName -like "*$TestUser*" -or 
+                    $_.PrimarySmtpAddress -like "*$TestUser*"
+                })
+            
+            if (@($ExoMailboxes).Count -eq 0) {
+                throw "Test user '$TestUser' not found in Exchange Online mailboxes with archives"
+            }
+            Write-Verbose -Message "Found test user in EXO: $($ExoMailboxes[0].UserPrincipalName)"
+        }
 
         $ExoCount = @($ExoMailboxes).Count
         $OnPremCount = @($OnPremMailboxes).Count
@@ -125,7 +152,16 @@ function Invoke-ArchiveGuidSync {
                     $SuccessCount++
                 }
                 else {
-                    $SyncResult = Sync-ArchiveGuidToOnPrem -OnPremMailbox $OnPremMailbox -ArchiveGUID $ExoMailbox.ArchiveGuid -ExchangeSession $ExchangeSession
+                    $SyncParams = @{
+                        OnPremMailbox   = $OnPremMailbox
+                        ArchiveGUID     = $ExoMailbox.ArchiveGuid
+                        ExchangeSession = $ExchangeSession
+                    }
+                    if ($ADDomainController) {
+                        $SyncParams['DomainController'] = $ADDomainController
+                    }
+                    
+                    $SyncResult = Sync-ArchiveGuidToOnPrem @SyncParams
 
                     $Results += [PSCustomObject]@{
                         Mailbox   = $ExoMailbox.UserPrincipalName
@@ -156,18 +192,31 @@ function Invoke-ArchiveGuidSync {
             }
         }
 
-        # Step 4: Generate report
+        # Step 4: Generate report (skip CSV for test mode)
         Write-Verbose -Message "Step 4: Generating report..."
-        Write-SyncReport -Results $Results -OutputPath $OutputPath
+        if (-not $TestUser) {
+            Write-SyncReport -Results $Results -OutputPath $OutputPath
+        }
+        else {
+            Write-Host "`n=== Test User Validation Results ===" -ForegroundColor Cyan
+            foreach ($Result in $Results) {
+                Write-Host "User: $($Result.Mailbox)" -ForegroundColor White
+                Write-Host "  Status: $($Result.Status)" -ForegroundColor $(if ($Result.Status -like 'Success*') { 'Green' } else { 'Yellow' })
+                Write-Host "  Message: $($Result.Message)" -ForegroundColor Gray
+            }
+        }
 
         # Print summary
         Write-Verbose -Message ""
-        Write-Verbose -Message "=== Sync Complete ==="
+        $SyncMode = if ($TestUser) { "(Test User Mode: $TestUser)" } else { "" }
+        Write-Verbose -Message "=== Sync Complete $SyncMode ==="
         Write-Verbose -Message "Total mailboxes processed: $ExoCount"
         Write-Verbose -Message "Successful syncs: $SuccessCount"
         Write-Verbose -Message "Failed syncs: $ErrorCount"
         Write-Verbose -Message "Skipped: $SkipCount"
-        Write-Verbose -Message "Report saved to: $OutputPath"
+        if (-not $TestUser) {
+            Write-Verbose -Message "Report saved to: $OutputPath"
+        }
 
         return $Results
     }

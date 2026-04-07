@@ -38,7 +38,11 @@ function Sync-ArchiveGuidToOnPrem {
 
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.Runspaces.PSSession]
-        $ExchangeSession
+        $ExchangeSession,
+
+        [Parameter(Mandatory = $false)]
+        [string]
+        $DomainController = $null
     )
 
     $Result = @{
@@ -51,12 +55,35 @@ function Sync-ArchiveGuidToOnPrem {
         $ADUpdated = $false
         $ExchangeUpdated = $false
 
+        # Resolve DC for AD operations
+        if ([string]::IsNullOrWhiteSpace($DomainController)) {
+            $DomainController = $script:ADDomainController
+        }
+
         # Step 1: Write to on-premises AD
         try {
-            Write-Verbose -Message "Writing ArchiveGUID to AD for mailbox: $($OnPremMailbox.SamAccountName)"
+            Write-Verbose -Message "Writing ArchiveGUID to AD for mailbox: $($OnPremMailbox.SamAccountName) on DC: $DomainController"
             
-            $ADUser = Get-ADUser -Identity $OnPremMailbox.SamAccountName -ErrorAction Stop
-            Set-ADUser -Identity $ADUser -Add @{ 'msExchArchiveGUID' = $ArchiveGUID.ToByteArray() } -ErrorAction Stop
+            $ADParams = @{
+                Identity    = $OnPremMailbox.SamAccountName
+                ErrorAction = 'Stop'
+            }
+            if ($DomainController) {
+                $ADParams['Server'] = $DomainController
+            }
+            
+            $ADUser = Get-ADUser @ADParams
+            
+            $SetParams = @{
+                Identity    = $ADUser
+                Add         = @{ 'msExchArchiveGUID' = $ArchiveGUID.ToByteArray() }
+                ErrorAction = 'Stop'
+            }
+            if ($DomainController) {
+                $SetParams['Server'] = $DomainController
+            }
+            
+            Set-ADUser @SetParams
             
             Write-Verbose -Message "Successfully updated AD msExchArchiveGUID for $($OnPremMailbox.SamAccountName)"
             $ADUpdated = $true
