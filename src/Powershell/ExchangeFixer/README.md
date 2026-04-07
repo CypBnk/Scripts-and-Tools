@@ -180,6 +180,23 @@ The script uses a **continue-on-error** strategy:
 
 This ensures maximum mailboxes are synced despite any issues.
 
+### On-Premises Exchange Connection Strategy
+
+The sync script uses a robust connection strategy for on-premises Exchange:
+
+1. **Primary Method**: Attempts standard Microsoft.Exchange configuration PSSession
+   - Uses Kerberos authentication
+   - Imports specific Exchange cmdlets: Get-Mailbox, Set-Mailbox, Get-RemoteMailbox
+   - Fast and lightweight
+
+2. **Fallback Method**: If primary fails, initializes via RemoteExchange.ps1
+   - Uses Microsoft's standard Exchange Server initialization script
+   - Path: `C:\Program Files\Microsoft\Exchange Server\V15\Bin\RemoteExchange.ps1`
+   - Loads full Exchange environment: types, formats, cmdlets, utilities
+   - Ensures maximum compatibility with different Exchange versions
+
+This dual approach ensures connectivity even in restrictive network environments or when Exchange Server is in unexpected states.
+
 ## Report Format
 
 The CSV report contains:
