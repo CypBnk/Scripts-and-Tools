@@ -19,8 +19,20 @@
 
 .PARAMETER ADDomainController
     Optional. FQDN of specific domain controller to use for AD operations.
-    If not specified, auto-discovers the PDC emulator of the current domain.
+    If not specified but ADDomain is provided, discovers DC in that domain.
+    If neither specified, auto-discovers the PDC emulator of the current domain.
     Example: 'dc1.contoso.com'
+
+.PARAMETER ADDomain
+    Optional. Active Directory domain name for DC discovery (fallback if DomainController not specified).
+    Useful when connecting to different domain than current machine domain.
+    Example: 'contoso.com'
+
+.PARAMETER VanityDomain
+    Optional. Vanity/corporate domain for matching on-premises mailboxes to EXO mailboxes.
+    When EXO UPN is user@onmicrosoft.com, searches on-premises for user@vanitydomain.com as fallback.
+    Useful for hybrid environments with onmicrosoft.com UPNs and on-premises vanity domains.
+    Example: 'contoso.com'
 
 .PARAMETER TestUser
     Optional. SAM account name or UPN of a single user to validate in end-to-end test mode.
@@ -59,6 +71,18 @@
     # Full sync using specific domain controller with verbose output
 
 .EXAMPLE
+    Sync-ArchiveGuidFromEXO -OnPremExchangeServer 'exchange.contoso.com' -ADDomain 'contoso.com' -Verbose
+    # Full sync using domain name for DC discovery (fallback option)
+
+.EXAMPLE
+    Sync-ArchiveGuidFromEXO -OnPremExchangeServer 'exchange.contoso.com' -VanityDomain 'contoso.com' -Verbose
+    # Full sync with vanity domain UPN matching for onmicrosoft.com UPNs
+
+.EXAMPLE
+    Sync-ArchiveGuidFromEXO -OnPremExchangeServer 'exchange.contoso.com' -TestUser 'user@contoso.onmicrosoft.com' -VanityDomain 'contoso.com' -Verbose
+    # Test user with vanity domain fallback: searches for user@contoso.com on-premises
+
+.EXAMPLE
     Sync-ArchiveGuidFromEXO -OnPremExchangeServer 'exchange.contoso.com' -TestUser 'jsmith' -Verbose
     # End-to-end validation for single user with console output
 
@@ -85,6 +109,14 @@ function Sync-ArchiveGuidFromEXO {
         [Parameter(Mandatory = $false)]
         [string]
         $ADDomainController = $null,
+
+        [Parameter(Mandatory = $false)]
+        [string]
+        $ADDomain = $null,
+
+        [Parameter(Mandatory = $false)]
+        [string]
+        $VanityDomain = $null,
 
         [Parameter(Mandatory = $false)]
         [string]
@@ -123,6 +155,12 @@ function Sync-ArchiveGuidFromEXO {
         }
         Write-Verbose -Message "On-Premises Exchange Server: $OnPremExchangeServer"
         Write-Verbose -Message "Domain Controller: $ADDomainController"
+        if ($ADDomain) {
+            Write-Verbose -Message "Domain Fallback: $ADDomain"
+        }
+        if ($VanityDomain) {
+            Write-Verbose -Message "Vanity Domain for Matching: $VanityDomain"
+        }
         Write-Verbose -Message "Output Path: $OutputPath"
         if ($PSBoundParameters.ContainsKey('Credential')) {
             Write-Verbose -Message "Using alternative credentials for on-premises connection"
@@ -155,6 +193,16 @@ function Sync-ArchiveGuidFromEXO {
                         if (-not [string]::IsNullOrWhiteSpace($InputDC)) {
                             $ADDomainController = $InputDC
                         }
+                        else {
+                            $InputDomain = Read-Host "Enter domain name for DC discovery, e.g., contoso.com (press Enter to skip)"
+                            if (-not [string]::IsNullOrWhiteSpace($InputDomain)) {
+                                $ADDomain = $InputDomain
+                            }
+                        }
+                        $InputVanity = Read-Host "Enter vanity domain for UPN matching, e.g., contoso.com (press Enter to skip)"
+                        if (-not [string]::IsNullOrWhiteSpace($InputVanity)) {
+                            $VanityDomain = $InputVanity
+                        }
                         Write-Verbose -Message "Menu selection: Full sync mode"
                     }
                     "2" {
@@ -169,6 +217,16 @@ function Sync-ArchiveGuidFromEXO {
                         $InputDC = Read-Host "Enter domain controller FQDN (press Enter for auto-discovery)"
                         if (-not [string]::IsNullOrWhiteSpace($InputDC)) {
                             $ADDomainController = $InputDC
+                        }
+                        else {
+                            $InputDomain = Read-Host "Enter domain name for DC discovery, e.g., contoso.com (press Enter to skip)"
+                            if (-not [string]::IsNullOrWhiteSpace($InputDomain)) {
+                                $ADDomain = $InputDomain
+                            }
+                        }
+                        $InputVanity = Read-Host "Enter vanity domain for UPN matching, e.g., contoso.com (press Enter to skip)"
+                        if (-not [string]::IsNullOrWhiteSpace($InputVanity)) {
+                            $VanityDomain = $InputVanity
                         }
                         Write-Verbose -Message "Menu selection: Single user test mode for user: $TestUser"
                     }
@@ -219,8 +277,10 @@ function Sync-ArchiveGuidFromEXO {
                     ADDomainController = $ADDomainController
                     WhatIf             = $WhatIfPreference
                     Verbose            = $VerbosePreference
+                }                
+                if ($ADDomain) {
+                    $InvokeParams['ADDomain'] = $ADDomain
                 }
-
                 if ($PSBoundParameters.ContainsKey('Credential')) {
                     $InvokeParams['Credential'] = $Credential
                 }

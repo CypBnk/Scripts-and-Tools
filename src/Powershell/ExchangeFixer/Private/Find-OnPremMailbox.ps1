@@ -14,12 +14,21 @@
 .PARAMETER OnPremMailboxes
     Array of on-premises mailboxes from Get-OnPremMailboxes
 
+.PARAMETER VanityDomain
+    Optional. Vanity/corporate domain to use as fallback when matching EXO mailboxes.
+    If EXO UPN is user@onmicrosoft.com, also tries user@vanitydomain.com for matching.
+    Example: 'contoso.com'
+
 .OUTPUTS
     [PSCustomObject] Matched on-premises mailbox, or $null if no match found
 
 .EXAMPLE
     $OnPremMailbox = Find-OnPremMailbox -ExoMailbox $ExoMbx -OnPremMailboxes $OnPremMbxes
     # Returns matching on-premises mailbox or $null
+
+.EXAMPLE
+    $OnPremMailbox = Find-OnPremMailbox -ExoMailbox $ExoMbx -OnPremMailboxes $OnPremMbxes -VanityDomain 'contoso.com'
+    # Tries exact match first, then tries user@contoso.com if EXO UPN is user@onmicrosoft.com
 #>
 function Find-OnPremMailbox {
     [CmdletBinding()]
@@ -30,7 +39,11 @@ function Find-OnPremMailbox {
 
         [Parameter(Mandatory = $true)]
         [PSCustomObject[]]
-        $OnPremMailboxes
+        $OnPremMailboxes,
+
+        [Parameter(Mandatory = $false)]
+        [string]
+        $VanityDomain = $null
     )
 
     try {
@@ -45,11 +58,30 @@ function Find-OnPremMailbox {
 
         # Strategy 2: Match by UserPrincipalName (if available)
         if (-not [string]::IsNullOrWhiteSpace($ExoMailbox.UserPrincipalName)) {
-            # Extract UPN-like parts if needed
             $UPN = $ExoMailbox.UserPrincipalName
-            $Match = $OnPremMailboxes | Where-Object { $_.PrimarySmtpAddress -like "*$($UPN.Split('@')[0])*" } | Select-Object -First 1
+            $UPNPrefix = $UPN.Split('@')[0]
+            
+            # Try exact UPN match first
+            $Match = $OnPremMailboxes | Where-Object { $_.UserPrincipalName -eq $UPN } | Select-Object -First 1
             if ($Match) {
-                Write-Verbose -Message "Matched EXO mailbox '$($ExoMailbox.UserPrincipalName)' to on-prem by UPN pattern: $($Match.SamAccountName)"
+                Write-Verbose -Message "Matched EXO mailbox '$UPN' to on-prem by exact UPN: $($Match.SamAccountName)"
+                return $Match
+            }
+            
+            # Try vanity domain UPN if provided (for onmicrosoft.com fallback)
+            if (-not [string]::IsNullOrWhiteSpace($VanityDomain)) {
+                $VanityUPN = "$UPNPrefix@$VanityDomain"
+                $Match = $OnPremMailboxes | Where-Object { $_.UserPrincipalName -eq $VanityUPN } | Select-Object -First 1
+                if ($Match) {
+                    Write-Verbose -Message "Matched EXO mailbox '$UPN' to on-prem by vanity UPN '$VanityUPN': $($Match.SamAccountName)"
+                    return $Match
+                }
+            }
+            
+            # Fallback: Match by UPN pattern
+            $Match = $OnPremMailboxes | Where-Object { $_.PrimarySmtpAddress -like "*$UPNPrefix*" } | Select-Object -First 1
+            if ($Match) {
+                Write-Verbose -Message "Matched EXO mailbox '$UPN' to on-prem by UPN pattern: $($Match.SamAccountName)"
                 return $Match
             }
         }

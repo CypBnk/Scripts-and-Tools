@@ -9,7 +9,13 @@
 
 .PARAMETER DomainController
     Optional. Specific domain controller FQDN to use for AD operations.
-    If not specified, auto-discovers the PDC emulator.
+    If not specified but ADDomain is provided, discovers DC in that domain.
+    If neither specified, auto-discovers the PDC emulator of current domain.
+
+.PARAMETER ADDomain
+    Optional. Active Directory domain name to search for domain controller.
+    Used as fallback if DomainController not specified.
+    Example: 'contoso.com'
 
 .OUTPUTS
     [bool] $true if AD is accessible, throws exception on failure.
@@ -20,14 +26,22 @@
 
 .EXAMPLE
     Connect-ADSession -DomainController 'dc1.contoso.com'
-    # Uses specified domain controller  
+    # Uses specified domain controller
+
+.EXAMPLE
+    Connect-ADSession -ADDomain 'contoso.com'
+    # Discovers DC in specified domain
 #>
 function Connect-ADSession {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $false)]
         [string]
-        $DomainController = $null
+        $DomainController = $null,
+
+        [Parameter(Mandatory = $false)]
+        [string]
+        $ADDomain = $null
     )
 
     try {
@@ -42,13 +56,26 @@ function Connect-ADSession {
         Import-Module -Name ActiveDirectory -ErrorAction Stop | Out-Null
 
         Write-Verbose -Message "Testing AD connectivity..."
-        $Domain = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()
+        
+        # Resolve domain for DC discovery
+        $TargetDomain = $null
+        if (-not [string]::IsNullOrWhiteSpace($ADDomain)) {
+            $TargetDomain = $ADDomain
+            Write-Verbose -Message "Using specified fallback domain for discovery: $ADDomain"
+        }
+        else {
+            $TargetDomain = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().Name
+            Write-Verbose -Message "Using current domain: $TargetDomain"
+        }
+        
+        # Get domain object
+        $Domain = [System.DirectoryServices.ActiveDirectory.Domain]::GetDomain([System.DirectoryServices.ActiveDirectory.DirectoryContext]::new([System.DirectoryServices.ActiveDirectory.DirectoryContextType]::Domain, $TargetDomain))
         Write-Verbose -Message "Connected to domain: $($Domain.Name)"
         
         # Store DC reference for thread-through to AD cmdlets
         if ([string]::IsNullOrWhiteSpace($DomainController)) {
             $script:ADDomainController = $Domain.PdcRoleOwner.Name
-            Write-Verbose -Message "Using PDC emulator: $($script:ADDomainController)"
+            Write-Verbose -Message "Using PDC emulator for domain $($Domain.Name): $($script:ADDomainController)"
         }
         else {
             $script:ADDomainController = $DomainController

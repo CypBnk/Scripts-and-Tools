@@ -48,6 +48,14 @@ function Invoke-ArchiveGuidSync {
 
         [Parameter(Mandatory = $false)]
         [string]
+        $ADDomain = $null,
+
+        [Parameter(Mandatory = $false)]
+        [string]
+        $VanityDomain = $null,
+
+        [Parameter(Mandatory = $false)]
+        [string]
         $TestUser = $null,
 
         [Parameter(Mandatory = $false)]
@@ -86,8 +94,14 @@ function Invoke-ArchiveGuidSync {
         if ($ADDomainController) {
             $ADParams['DomainController'] = $ADDomainController
         }
+        if ($ADDomain) {
+            $ADParams['ADDomain'] = $ADDomain
+        }
         Connect-ADSession @ADParams | Out-Null
         Write-Verbose -Message "Connected to on-premises Active Directory"
+        if ($ADDomain) {
+            Write-Verbose -Message "Using domain for DC discovery: $ADDomain"
+        }
 
         # Step 2: Retrieve mailboxes
         Write-Verbose -Message "Step 2: Retrieving mailboxes from both environments..."
@@ -125,8 +139,16 @@ function Invoke-ArchiveGuidSync {
             Write-Verbose -Message "Processing: $CurrentOperation"
 
             try {
-                # Match to on-premises mailbox
-                $OnPremMailbox = Find-OnPremMailbox -ExoMailbox $ExoMailbox -OnPremMailboxes $OnPremMailboxes
+                # Match to on-premises mailbox with vanity domain fallback
+                $FindParams = @{
+                    ExoMailbox      = $ExoMailbox
+                    OnPremMailboxes = $OnPremMailboxes
+                }
+                if ($VanityDomain) {
+                    $FindParams['VanityDomain'] = $VanityDomain
+                    Write-Verbose -Message "Using vanity domain for matching: $VanityDomain"
+                }
+                $OnPremMailbox = Find-OnPremMailbox @FindParams
 
                 if (-not $OnPremMailbox) {
                     Write-Verbose -Message "SKIPPED: No matching on-premises mailbox for $($ExoMailbox.UserPrincipalName)"
