@@ -1,0 +1,51 @@
+:root {
+  --bg: #eef2f7;
+  --surface: #ffffff;
+  --border: #d5dce7;
+  --text: #223047;
+  --muted: #5a6880;
+  --accent: #1d5fbf;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    Segoe UI,
+    Tahoma,
+    sans-serif;
+  color: var(--text);
+  background: radial-gradient(circle at top, #f7fbff 0%, var(--bg) 55%);
+}
+
+.shell {
+  max-width: 980px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.9rem;
+}
+
+header p {
+  margin-top: 0.5rem;
+  color: var(--muted);
+}
+
+.panel {
+  margin-top: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+}
+
+.panel h2 {
+  margin-top: 0;
+  color: var(--accent);
+}

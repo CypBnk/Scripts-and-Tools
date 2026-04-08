@@ -1,0 +1,131 @@
+{
+    "Items": [
+        {
+            "Workload": "Exchange",
+            "ModuleName": "ExchangeArchiveSync",
+            "DisplayName": "Sync Archive GUID from EXO",
+            "RunType": "ModuleCommand",
+            "Command": "Sync-ArchiveGuidFromEXO",
+            "TargetPath": "Modules\\ExchangeArchiveSync\\ExchangeFixer.psm1",
+            "Args": [],
+            "Prerequisites": {
+                "Modules": [
+                    "ExchangeOnlineManagement",
+                    "ActiveDirectory"
+                ],
+                "Commands": [
+                    "Test-NetConnection"
+                ]
+            },
+            "IsPlaceholder": false
+        },
+        {
+            "Workload": "OnPrem-X-Cloud",
+            "ModuleName": "ExchangeArchiveSync",
+            "DisplayName": "Sync Archive GUID from EXO",
+            "RunType": "ModuleCommand",
+            "Command": "Sync-ArchiveGuidFromEXO",
+            "TargetPath": "Modules\\ExchangeArchiveSync\\ExchangeFixer.psm1",
+            "Args": [],
+            "Prerequisites": {
+                "Modules": [
+                    "ExchangeOnlineManagement",
+                    "ActiveDirectory"
+                ],
+                "Commands": [
+                    "Test-NetConnection"
+                ]
+            },
+            "IsPlaceholder": false
+        },
+        {
+            "Workload": "Entra",
+            "ModuleName": "EntraGroupUsageDiscovery",
+            "DisplayName": "Security Group Usage Discovery (Smoke)",
+            "RunType": "ModuleCommand",
+            "Command": "Invoke-SecurityGroupUsageDiscovery",
+            "TargetPath": "Modules\\EntraGroupUsageDiscovery\\SecurityGroupUsage.psm1",
+            "Args": [
+                "-SkipGraph",
+                "-OutputPath",
+                ".\\out\\SecurityGroupUsage\\mastermodule"
+            ],
+            "Prerequisites": {
+                "Modules": [
+                    "Microsoft.Graph.Authentication"
+                ],
+                "Commands": [
+                    "Connect-MgGraph",
+                    "Invoke-MgGraphRequest"
+                ]
+            },
+            "IsPlaceholder": false
+        },
+        {
+            "Workload": "Intune",
+            "ModuleName": "IntuneDeviceManagement",
+            "DisplayName": "Get Stale Devices",
+            "RunType": "Script",
+            "Command": "Get-StaleDevices",
+            "TargetPath": "Modules\\IntuneDeviceManagement\\Get-StaleDevices.ps1",
+            "Args": [],
+            "Prerequisites": {
+                "Modules": [
+                    "Microsoft.Graph.Authentication"
+                ],
+                "Commands": [
+                    "Connect-MgGraph",
+                    "Invoke-MgGraphRequest"
+                ]
+            },
+            "IsPlaceholder": false
+        },
+        {
+            "Workload": "Intune",
+            "ModuleName": "IntuneDeviceManagement",
+            "DisplayName": "Invoke Entra Device Cleanup",
+            "RunType": "Script",
+            "Command": "Invoke-EntraDeviceCleanup",
+            "TargetPath": "Modules\\IntuneDeviceManagement\\Invoke-EntraDeviceCleanup.ps1",
+            "Args": [],
+            "Prerequisites": {
+                "Modules": [
+                    "Microsoft.Graph.Authentication"
+                ],
+                "Commands": [
+                    "Connect-MgGraph",
+                    "Invoke-MgGraphRequest"
+                ]
+            },
+            "IsPlaceholder": false
+        },
+        {
+            "Workload": "SharePoint",
+            "ModuleName": "Planned",
+            "DisplayName": "SharePoint workload actions (planned)",
+            "RunType": "Placeholder",
+            "Command": "",
+            "TargetPath": "",
+            "Args": [],
+            "Prerequisites": {
+                "Modules": [],
+                "Commands": []
+            },
+            "IsPlaceholder": true
+        },
+        {
+            "Workload": "Teams",
+            "ModuleName": "Planned",
+            "DisplayName": "Teams workload actions (planned)",
+            "RunType": "Placeholder",
+            "Command": "",
+            "TargetPath": "",
+            "Args": [],
+            "Prerequisites": {
+                "Modules": [],
+                "Commands": []
+            },
+            "IsPlaceholder": true
+        }
+    ]
+}

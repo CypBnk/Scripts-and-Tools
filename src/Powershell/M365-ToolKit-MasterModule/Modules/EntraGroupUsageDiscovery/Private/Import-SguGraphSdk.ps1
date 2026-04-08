@@ -1,0 +1,1 @@
+# Superseded by Test-SguPrerequisites (Private/Test-SguPrerequisites.ps1).
