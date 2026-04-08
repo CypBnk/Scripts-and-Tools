@@ -25,6 +25,7 @@ function Invoke-M365Toolkit {
     if ($Interface -eq 'Html') {
         $htmlPath = Join-Path (Get-ToolkitRoot) 'GUI\HTML\index.html'
         if (-not (Test-Path -Path $htmlPath -PathType Leaf)) {
+            Write-ToolkitLog -Level ERROR -Source 'Invoke-M365Toolkit' -Message "HTML interface file not found: $htmlPath"
             throw "HTML interface file not found: $htmlPath"
         }
 
@@ -32,5 +33,11 @@ function Invoke-M365Toolkit {
         return
     }
 
-    Start-ToolkitGui
+    try {
+        Start-ToolkitGui
+    }
+    catch {
+        Write-ToolkitLog -Level ERROR -Source 'Invoke-M365Toolkit' -Message 'GUI failed to start' -ErrorRecord $_
+        throw
+    }
 }

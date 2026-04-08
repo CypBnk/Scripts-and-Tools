@@ -47,8 +47,7 @@
             "TargetPath": "Modules\\EntraGroupUsageDiscovery\\SecurityGroupUsage.psm1",
             "Args": [
                 "-SkipGraph",
-                "-OutputPath",
-                ".\\out\\SecurityGroupUsage\\mastermodule"
+                "-OutputPath .\\out\\SecurityGroupUsage\\mastermodule"
             ],
             "Prerequisites": {
                 "Modules": [
@@ -69,8 +68,7 @@
             "Command": "Invoke-SecurityGroupUsageDiscovery",
             "TargetPath": "Modules\\EntraGroupUsageDiscovery\\SecurityGroupUsage.psm1",
             "Args": [
-                "-OutputPath",
-                ".\\out\\SecurityGroupUsage\\mastermodule"
+                "-OutputPath .\\out\\SecurityGroupUsage\\mastermodule"
             ],
             "Prerequisites": {
                 "Modules": [

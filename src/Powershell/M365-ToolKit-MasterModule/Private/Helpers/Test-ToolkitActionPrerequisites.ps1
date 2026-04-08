@@ -37,12 +37,17 @@ function Test-ToolkitActionPrerequisites {
 
     $requiredModules = @()
     $requiredCommands = @()
-    if ($null -ne $Action.Prerequisites) {
-        if ($null -ne $Action.Prerequisites.Modules) {
-            $requiredModules = @($Action.Prerequisites.Modules)
+    $prerequisites = $null
+    if ($Action.PSObject.Properties.Name -contains 'Prerequisites') {
+        $prerequisites = $Action.Prerequisites
+    }
+
+    if ($null -ne $prerequisites) {
+        if ($null -ne $prerequisites.Modules) {
+            $requiredModules = @($prerequisites.Modules)
         }
-        if ($null -ne $Action.Prerequisites.Commands) {
-            $requiredCommands = @($Action.Prerequisites.Commands)
+        if ($null -ne $prerequisites.Commands) {
+            $requiredCommands = @($prerequisites.Commands)
         }
     }
 
@@ -66,6 +71,11 @@ function Test-ToolkitActionPrerequisites {
     }
 
     $failedCount = @($checks | Where-Object { -not $_.Passed }).Count
+    if ($failedCount -gt 0) {
+        $failedNames = @($checks | Where-Object { -not $_.Passed } | ForEach-Object { "$($_.Name): $($_.Detail)" }) -join '; '
+        Write-ToolkitLog -Level WARN -Source 'Test-ToolkitActionPrerequisites' -Message "Preflight for '$($Action.DisplayName)' found $failedCount issue(s): $failedNames"
+    }
+
     [pscustomobject]@{
         Success = ($failedCount -eq 0)
         Summary = if ($failedCount -eq 0) { 'Preflight passed.' } else { "Preflight found $failedCount issue(s)." }

@@ -18,34 +18,41 @@ function Resolve-ToolkitAction {
     }
 
     $root = Get-ToolkitRoot
-    $args = @()
+    $actionArgs = @()
     if ($PSBoundParameters.ContainsKey('ArgsOverride')) {
-        $args = @($ArgsOverride | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) })
+        $actionArgs = @($ArgsOverride | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) })
     }
     elseif ($null -ne $Action.Args) {
-        $args = @($Action.Args)
+        $actionArgs = @($Action.Args)
     }
+
+    $splatParams = ConvertTo-SplatHashtable -ArgumentList $actionArgs
 
     try {
         if ($Action.RunType -eq 'ModuleCommand') {
             $modulePath = Join-Path $root $Action.TargetPath
+            Write-ToolkitLog -Level INFO -Source 'Resolve-ToolkitAction' -Message "Importing module '$modulePath' and running '$($Action.Command)'"
             Import-Module -Name $modulePath -Force -ErrorAction Stop
-            & $Action.Command @args
+            & $Action.Command @splatParams
         }
         elseif ($Action.RunType -eq 'Script') {
             $scriptPath = Join-Path $root $Action.TargetPath
-            & $scriptPath @args
+            Write-ToolkitLog -Level INFO -Source 'Resolve-ToolkitAction' -Message "Running script '$scriptPath'"
+            & $scriptPath @splatParams
         }
         else {
+            Write-ToolkitLog -Level ERROR -Source 'Resolve-ToolkitAction' -Message "Unsupported RunType: $($Action.RunType)"
             throw "Unsupported RunType: $($Action.RunType)"
         }
 
+        Write-ToolkitLog -Level INFO -Source 'Resolve-ToolkitAction' -Message "Action completed: $($Action.DisplayName)"
         return [pscustomobject]@{
             Success = $true
             Message = "Action completed successfully: $($Action.DisplayName)"
         }
     }
     catch {
+        Write-ToolkitLog -Level ERROR -Source 'Resolve-ToolkitAction' -Message "Action failed: $($Action.DisplayName)" -ErrorRecord $_
         return [pscustomobject]@{
             Success = $false
             Message = $_.Exception.Message

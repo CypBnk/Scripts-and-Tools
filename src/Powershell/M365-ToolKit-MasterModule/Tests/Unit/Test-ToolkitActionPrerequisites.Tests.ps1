@@ -25,4 +25,18 @@ Describe 'Test-ToolkitActionPrerequisites' {
             @($result.Checks | Where-Object { $_.Name -eq 'Target path exists' -and $_.Passed }).Count | Should Be 1
         }
     }
+
+    It 'handles actions that do not expose a Prerequisites property' {
+        InModuleScope M365-ToolKit-MasterModule {
+            $action = [pscustomobject]@{
+                DisplayName   = 'Projected action'
+                IsPlaceholder = $false
+                TargetPath    = 'M365-ToolKit-MasterModule.psd1'
+            }
+
+            { Test-ToolkitActionPrerequisites -Action $action } | Should Not Throw
+            $result = Test-ToolkitActionPrerequisites -Action $action
+            @($result.Checks | Where-Object { $_.Name -eq 'Target path exists' -and $_.Passed }).Count | Should Be 1
+        }
+    }
 }

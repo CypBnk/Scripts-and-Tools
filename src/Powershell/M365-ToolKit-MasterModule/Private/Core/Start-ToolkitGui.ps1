@@ -41,7 +41,7 @@ function Start-ToolkitGui {
         @(
             $state.Catalog |
             Where-Object { $_.Workload -eq $Workload } |
-            Select-Object Workload, ModuleName, DisplayName, RunType, Command, TargetPath, IsPlaceholder, Args
+            Select-Object Workload, ModuleName, DisplayName, RunType, Command, TargetPath, IsPlaceholder, Args, Prerequisites
         )
     }
 
@@ -131,7 +131,15 @@ function Start-ToolkitGui {
                 return
             }
 
-            $result = Test-ToolkitActionPrerequisites -Action $selectedAction
+            try {
+                $result = Test-ToolkitActionPrerequisites -Action $selectedAction
+            }
+            catch {
+                Write-ToolkitLog -Level ERROR -Source 'Start-ToolkitGui' -Message "Preflight crashed for '$($selectedAction.DisplayName)'" -ErrorRecord $_
+                & $writeLog -Message "Preflight error: $($_.Exception.Message)"
+                return
+            }
+
             $lines = New-Object System.Collections.Generic.List[string]
             $lines.Add($result.Summary)
             foreach ($check in $result.Checks) {
@@ -150,6 +158,7 @@ function Start-ToolkitGui {
                 return
             }
 
+            Write-ToolkitLog -Level INFO -Source 'Start-ToolkitGui' -Message "User initiated run: $($selectedAction.DisplayName)"
             & $writeLog -Message "Running: $($selectedAction.DisplayName)"
             $overrideArgs = & $parseArgs -Text $txtArgs.Text
             $runInNewWindow = $false

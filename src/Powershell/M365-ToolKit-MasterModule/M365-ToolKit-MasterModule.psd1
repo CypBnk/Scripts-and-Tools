@@ -9,7 +9,8 @@
     PowerShellVersion = '7.0'
     FunctionsToExport = @(
         'Invoke-M365Toolkit',
-        'Get-M365ToolkitCatalog'
+        'Get-M365ToolkitCatalog',
+        'Get-M365ToolkitLog'
     )
     CmdletsToExport   = @()
     VariablesToExport = @()

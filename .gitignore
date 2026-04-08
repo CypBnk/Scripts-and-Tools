@@ -73,3 +73,4 @@ out/
 .github/
 .dev/
 Pester-test/
+Tests/
