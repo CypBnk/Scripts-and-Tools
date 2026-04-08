@@ -67,14 +67,23 @@ function Start-ToolkitActionInNewWindow {
 while (`$i -lt `$flatArgs.Count) {
     `$token = [string]`$flatArgs[`$i]
     if (`$token.StartsWith('-')) {
-        `$paramName = `$token.TrimStart('-')
-        `$nextIndex = `$i + 1
-        if (`$nextIndex -lt `$flatArgs.Count -and -not ([string]`$flatArgs[`$nextIndex]).StartsWith('-')) {
-            `$splatParams[`$paramName] = `$flatArgs[`$nextIndex]
-            `$i += 2
-        } else {
-            `$splatParams[`$paramName] = `$true
+        `$stripped = `$token.Substring(1)
+        `$spaceIdx = `$stripped.IndexOf(' ')
+        if (`$spaceIdx -gt 0) {
+            `$paramName = `$stripped.Substring(0, `$spaceIdx)
+            `$paramValue = `$stripped.Substring(`$spaceIdx + 1).Trim().Trim('"', "'")
+            `$splatParams[`$paramName] = `$paramValue
             `$i += 1
+        } else {
+            `$paramName = `$stripped
+            `$nextIndex = `$i + 1
+            if (`$nextIndex -lt `$flatArgs.Count -and -not ([string]`$flatArgs[`$nextIndex]).StartsWith('-')) {
+                `$splatParams[`$paramName] = `$flatArgs[`$nextIndex]
+                `$i += 2
+            } else {
+                `$splatParams[`$paramName] = `$true
+                `$i += 1
+            }
         }
     } else {
         `$i += 1

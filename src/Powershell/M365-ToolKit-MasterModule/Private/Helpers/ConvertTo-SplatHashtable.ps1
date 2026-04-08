@@ -23,16 +23,27 @@ function ConvertTo-SplatHashtable {
     while ($i -lt $ArgumentList.Count) {
         $token = [string]$ArgumentList[$i]
         if ($token.StartsWith('-')) {
-            $paramName = $token.TrimStart('-')
-            $nextIndex = $i + 1
-            if ($nextIndex -lt $ArgumentList.Count -and -not ([string]$ArgumentList[$nextIndex]).StartsWith('-')) {
-                $result[$paramName] = $ArgumentList[$nextIndex]
-                $i += 2
+            # Handle '-ParamName Value' in a single token (e.g. user typed on one line)
+            $stripped = $token.Substring(1)   # remove leading dash
+            $spaceIdx = $stripped.IndexOf(' ')
+            if ($spaceIdx -gt 0) {
+                $paramName = $stripped.Substring(0, $spaceIdx)
+                $paramValue = $stripped.Substring($spaceIdx + 1).Trim().Trim('"', "'")
+                $result[$paramName] = $paramValue
+                $i += 1
             }
             else {
-                # Switch parameter (no value follows, or next token is another parameter)
-                $result[$paramName] = $true
-                $i += 1
+                $paramName = $stripped
+                $nextIndex = $i + 1
+                if ($nextIndex -lt $ArgumentList.Count -and -not ([string]$ArgumentList[$nextIndex]).StartsWith('-')) {
+                    $result[$paramName] = $ArgumentList[$nextIndex]
+                    $i += 2
+                }
+                else {
+                    # Switch parameter (no value follows, or next token is another parameter)
+                    $result[$paramName] = $true
+                    $i += 1
+                }
             }
         }
         else {
