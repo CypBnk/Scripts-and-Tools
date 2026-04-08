@@ -68,7 +68,7 @@ tmp/
 *.tmp
 *.bak
 *.old
-/src/powershell/to be sorted/*
+/src/powershell/to be sorted/
 out/
 .github/
 .dev/
