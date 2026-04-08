@@ -1,0 +1,45 @@
+{
+  "$schemaVersion": "1.0",
+  "meta": {
+    "name": "Magenta365 Corporate",
+    "description": "Telekom-inspired corporate UI tokens for desktop and web surfaces.",
+    "cues": ["magenta", "telekom", "corporate", "hero", "campaign"]
+  },
+  "colors": {
+    "primary": "#E20074",
+    "primaryDark": "#B0005C",
+    "primaryLight": "#F8D6E7",
+    "surface": "#FFFFFF",
+    "surfaceAlt": "#F4F6FA",
+    "border": "#D3DAE6",
+    "text": "#1E2638",
+    "textMuted": "#4F5B70",
+    "success": "#117A37",
+    "warning": "#B76E00",
+    "danger": "#B42318"
+  },
+  "themes": {
+    "light": {
+      "background": "#EEF2F8",
+      "card": "#FFFFFF",
+      "cardBorder": "#D3DAE6",
+      "cta": "#E20074",
+      "ctaHover": "#B0005C",
+      "ctaText": "#FFFFFF"
+    }
+  },
+  "typography": {
+    "fontFamily": "Segoe UI",
+    "headingWeight": 600,
+    "bodyWeight": 400
+  },
+  "layout": {
+    "radius": 8,
+    "cardRadius": 10,
+    "cardShadow": "0 3 12 rgba(20, 35, 60, 0.08)"
+  },
+  "responsive": {
+    "compactBreakpoint": 900,
+    "wideBreakpoint": 1280
+  }
+}

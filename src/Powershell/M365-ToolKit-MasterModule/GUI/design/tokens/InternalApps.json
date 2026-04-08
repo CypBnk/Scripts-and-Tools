@@ -1,0 +1,31 @@
+{
+  "$schemaVersion": "1.0",
+  "meta": {
+    "name": "Internal Apps",
+    "description": "Neutral enterprise tokens for dense internal dashboards.",
+    "cues": ["internal", "intranet", "dashboard", "inventory", "operations"]
+  },
+  "colors": {
+    "primary": "#0E5AB7",
+    "primaryDark": "#0A458D",
+    "surface": "#FFFFFF",
+    "surfaceAlt": "#F7F8FB",
+    "border": "#D8DEEA",
+    "text": "#1F2A3D",
+    "textMuted": "#51617A"
+  },
+  "themes": {
+    "light": {
+      "background": "#EEF1F7",
+      "card": "#FFFFFF",
+      "cardBorder": "#D8DEEA",
+      "cta": "#0E5AB7",
+      "ctaHover": "#0A458D",
+      "ctaText": "#FFFFFF"
+    }
+  },
+  "layout": {
+    "radius": 6,
+    "cardRadius": 8
+  }
+}

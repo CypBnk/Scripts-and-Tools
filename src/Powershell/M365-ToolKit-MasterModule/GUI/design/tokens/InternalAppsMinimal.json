@@ -1,0 +1,18 @@
+{
+  "$schemaVersion": "1.0",
+  "meta": {
+    "name": "Internal Apps Minimal",
+    "description": "Low-decoration extension of Internal Apps profile.",
+    "cues": ["minimal", "mvp"],
+    "extends": "internal-apps"
+  },
+  "layout": {
+    "radius": 4,
+    "cardRadius": 6
+  },
+  "themes": {
+    "light": {
+      "background": "#F3F5F9"
+    }
+  }
+}

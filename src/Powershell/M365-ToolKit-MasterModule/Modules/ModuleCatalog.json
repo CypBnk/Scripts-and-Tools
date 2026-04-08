@@ -41,12 +41,34 @@
         {
             "Workload": "Entra",
             "ModuleName": "EntraGroupUsageDiscovery",
-            "DisplayName": "Security Group Usage Discovery (Smoke)",
+            "DisplayName": "(Smoke/Dry Run) Security Group Usage Discovery ",
             "RunType": "ModuleCommand",
             "Command": "Invoke-SecurityGroupUsageDiscovery",
             "TargetPath": "Modules\\EntraGroupUsageDiscovery\\SecurityGroupUsage.psm1",
             "Args": [
                 "-SkipGraph",
+                "-OutputPath",
+                ".\\out\\SecurityGroupUsage\\mastermodule"
+            ],
+            "Prerequisites": {
+                "Modules": [
+                    "Microsoft.Graph.Authentication"
+                ],
+                "Commands": [
+                    "Connect-MgGraph",
+                    "Invoke-MgGraphRequest"
+                ]
+            },
+            "IsPlaceholder": false
+        },
+        {
+            "Workload": "Entra",
+            "ModuleName": "EntraGroupUsageDiscovery",
+            "DisplayName": "Security Group Usage Discovery",
+            "RunType": "ModuleCommand",
+            "Command": "Invoke-SecurityGroupUsageDiscovery",
+            "TargetPath": "Modules\\EntraGroupUsageDiscovery\\SecurityGroupUsage.psm1",
+            "Args": [
                 "-OutputPath",
                 ".\\out\\SecurityGroupUsage\\mastermodule"
             ],

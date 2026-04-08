@@ -1,0 +1,26 @@
+{
+  "$schemaVersion": "1.0",
+  "profiles": [
+    {
+      "id": "magenta365-corp",
+      "name": "Magenta365 Corporate",
+      "priority": 100,
+      "aliases": ["magenta", "telekom", "magenta365", "corp", "corporate"],
+      "tokenFile": "./Magenta365.json"
+    },
+    {
+      "id": "internal-apps",
+      "name": "Internal Apps",
+      "priority": 80,
+      "aliases": ["internal", "intranet", "dashboard", "inventory style", "my internal apps"],
+      "tokenFile": "./InternalApps.json"
+    },
+    {
+      "id": "internal-apps-minimal",
+      "name": "Internal Apps Minimal",
+      "priority": 70,
+      "aliases": ["minimal", "mvp"],
+      "tokenFile": "./InternalAppsMinimal.json"
+    }
+  ]
+}
