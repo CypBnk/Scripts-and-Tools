@@ -20,7 +20,7 @@ function Update-ProgressStep {
     )
 
     $percent = [int](($Step / $ProgressTotalSteps) * 100)
-    Write-Progress -Id 1 -Activity $ProgressActivity -Status "Step $Step of $ProgressTotalSteps: $Status" -PercentComplete $percent
+    Write-Progress -Id 1 -Activity $ProgressActivity -Status "Step $($Step) of $($ProgressTotalSteps): $Status" -PercentComplete $percent
 }
 
 #Write-DebugStep "Initializing Outlook COM objects"
