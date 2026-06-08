@@ -16,19 +16,32 @@
         <section class="lang-block" aria-labelledby="title-de">
           <h2 id="title-de" class="lang-title">Deutsch</h2>
           <p class="intro">
+            Es wurde ein Audio Problem in Microsoft Teams festgestellt! <br />
             Diese Seite hilft Ihnen, schnell einen Befehl auszufuhren, um die
             Audiofunktion in Microsoft Teams neu zu laden.
           </p>
 
-          <ol class="steps">
-            <li>Klicken Sie auf <strong>Befehl kopieren</strong></li>
+          <ul class="dashless-list">
             <li>
-              Offnen Sie <strong>PowerShell</strong> als aktueller Benutzer
+              <span class="step-icon" aria-hidden="true">1</span>
+              Drucken Sie <span class="keycap">Win</span> +
+              <span class="keycap">X</span> um <strong>PowerShell</strong> zu
+              offnen
             </li>
             <li>
-              Fugen Sie den Befehl ein und drucken Sie <strong>Enter</strong>
+              <span class="step-icon" aria-hidden="true">2</span>
+              Klicken Sie auf <strong>Befehl kopieren</strong>
             </li>
-          </ol>
+            <li>
+              <span class="step-icon" aria-hidden="true">3</span>
+              Fugen Sie den Befehl mit <span class="keycap">Strg</span> +
+              <span class="keycap">V</span> ein
+            </li>
+            <li>
+              <span class="step-icon" aria-hidden="true">4</span>
+              Drucken Sie <strong>Enter</strong>
+            </li>
+          </ul>
 
           <section class="command-panel" aria-labelledby="command-label-de">
             <div class="command-header">
@@ -46,14 +59,30 @@ Get-Process -Name "ms-teams","Teams" -ErrorAction SilentlyContinue|out-Null;$Stu
         <p class="section-label" aria-label="English section">English</p>
 
         <p class="intro">
+          We detect and audio issue in Microsoft Teams! <br />
           This page helps you quickly run one command for common Microsoft Teams
           audio refresh needs.
         </p>
 
-        <ol class="steps">
-          <li>Click <strong>Copy Command</strong></li>
-          <li>Open <strong>PowerShell</strong> as your current user</li>
-          <li>Paste the command and press <strong>Enter</strong></li>
+        <ol class="ordered-list primary-list">
+          <li>
+            <span class="step-icon" aria-hidden="true">1</span>
+            Press <span class="keycap">Win</span> +
+            <span class="keycap">X</span> to open <strong>PowerShell</strong>
+          </li>
+          <li>
+            <span class="step-icon" aria-hidden="true">2</span>
+            Click <strong>Copy Command</strong>
+          </li>
+          <li>
+            <span class="step-icon" aria-hidden="true">3</span>
+            Paste with <span class="keycap">Ctrl</span> +
+            <span class="keycap">V</span>
+          </li>
+          <li>
+            <span class="step-icon" aria-hidden="true">4</span>
+            Press <strong>Enter</strong>
+          </li>
         </ol>
 
         <section class="command-panel" aria-labelledby="command-label">
