@@ -1,0 +1,44 @@
+// ASR Rule Triggers with ±5 second event context
+// Tables: DeviceEvents (MDE / Microsoft Defender for Endpoint)
+// Finds all ASR rule trigger events, then joins all device events
+// occurring within 5 seconds before or after each trigger on the same device.
+let ASREvents =
+    DeviceEvents
+    | where ActionType startswith "AsrBlocked" or ActionType startswith "AsrAudited"
+    | extend AF = todynamic(AdditionalFields)
+    | project
+        DeviceId,
+        DeviceName,
+        ASRTimestamp     = Timestamp,
+        ASRActionType    = ActionType,
+        ASRFileName      = FileName,
+        ASRFolderPath    = FolderPath,
+        ASRProcessName   = InitiatingProcessFileName,
+        ASRRuleId        = tostring(AF.RuleId),
+        ASRRuleName      = tostring(AF.RuleName),
+        ASRIsAudit       = iff(ActionType startswith "AsrAudited", true, false);
+// All device events on the same device within the ±5s window
+DeviceEvents
+| join kind=inner (ASREvents) on DeviceId
+| where Timestamp between (datetime_add('second', -5, ASRTimestamp) .. datetime_add('second', 5, ASRTimestamp))
+| project
+    DeviceName,
+    // ---- ASR trigger context ----
+    ASRTimestamp,
+    ASRActionType,
+    ASRFileName,
+    ASRFolderPath,
+    ASRProcessName,
+    ASRRuleId,
+    ASRRuleName,
+    ASRIsAudit,
+    // ---- surrounding event ----
+    EventTimestamp       = Timestamp,
+    OffsetSeconds        = datetime_diff('second', Timestamp, ASRTimestamp),
+    EventActionType      = ActionType,
+    EventFileName        = FileName,
+    EventFolderPath      = FolderPath,
+    EventInitProc        = InitiatingProcessFileName,
+    EventInitProcCmdLine = InitiatingProcessCommandLine,
+    EventAdditional      = AdditionalFields
+| sort by DeviceName asc, ASRTimestamp asc, OffsetSeconds asc
