@@ -84,6 +84,7 @@ Update-ProgressStep -Step 4 -Status "Releasing existing resources and cleaning u
 clear-host
 #Write-DebugStep "Showing user menu"
 Update-ProgressStep -Step 5 -Status "Waiting for user action"
+Write-Progress -Id 1 -Activity $ProgressActivity -Completed
 Write-Host "Select an option:" -ForegroundColor Cyan
 Write-Host "1 - Close Program"
 Write-Host "2 - Close Program and Start Teams"
@@ -94,6 +95,7 @@ do {
         Write-Host "Invalid input. Please enter 1 or 2." -ForegroundColor Yellow
     }
 }
+
 while ($c -ne "1" -and $c -ne "2")
 
 if ($c -eq "1") {
@@ -131,5 +133,3 @@ else {
         Write-Host "Status: Could not start Teams automatically." -ForegroundColor Red
     }
 }
-
-Write-Progress -Id 1 -Activity $ProgressActivity -Completed
