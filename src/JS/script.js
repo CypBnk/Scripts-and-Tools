@@ -33,26 +33,33 @@ async function copyCustomCommand(commandElement, statusElement) {
       statusElement.textContent = "Command copied to clipboard.";
     }
   } catch (error) {
-    const range = document.createRange();
-    range.selectNodeContents(commandElement);
-
-    const selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
+    const textArea = document.createElement("textarea");
+    textArea.value = FULL_COMMAND;
+    textArea.setAttribute("readonly", "");
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
 
     try {
-      document.execCommand("copy");
-      if (statusElement) {
-        statusElement.textContent = "Command copied to clipboard.";
+      const copied = document.execCommand("copy");
+      if (copied) {
+        if (statusElement) {
+          statusElement.textContent = "Command copied to clipboard.";
+        }
+      } else if (statusElement) {
+        statusElement.textContent =
+          "Unable to copy automatically. Select the command and press Ctrl+C.";
       }
     } catch (execError) {
       if (statusElement) {
         statusElement.textContent =
           "Unable to copy automatically. Select the command and press Ctrl+C.";
       }
+    } finally {
+      document.body.removeChild(textArea);
     }
-
-    selection.removeAllRanges();
   }
 }
 

