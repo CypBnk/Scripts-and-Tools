@@ -1,0 +1,35 @@
+// ============================================================================
+// BEISPIEL: Report Only Conditional Access Policy Failures 
+// für Benutzer ohne verwaltete Windows Devices
+// ============================================================================
+//
+// HINWEIS: Diese Query ist ein Template. Verwende die spezifischen Queries:
+// - Report-Only-CA-Failures-UnmanagedDevices.kql (detailliert)
+// - Report-Only-CA-Failures-Aggregated.kql (aggregiert)
+//
+// ============================================================================
+
+SignInLogs
+// Zeitraum anpassen:
+// ago(24h)  = Letzte 24 Stunden
+// ago(7d)   = Letzte 7 Tage  
+// ago(30d)  = Letzte 30 Tage
+| where TimeGenerated > ago(30d)
+// Report Only Policies haben ReportSeverity = "Information"
+| where ReportSeverity == "Information"
+// CA-bezogene Fehler
+| where Status.failureReason contains "Conditional Access" 
+    or ConditionalAccessStatus == "failure"
+// Unverwaltete Geräte: DeviceDetail.deviceId ist null/leer
+| where isempty(DeviceDetail.deviceId)
+// Wichtigste Felder für Report
+| project
+    UPN = UserPrincipalName,
+    CARule = ConditionalAccessRule,
+    IPAddress,
+    City = LocationDetails.city,
+    Country = LocationDetails.countryOrRegion,
+    Timestamp = TimeGenerated,
+    CorrelationID = CorrelationId
+| order by Timestamp desc
+| limit 100

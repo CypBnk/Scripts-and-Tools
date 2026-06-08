@@ -1,0 +1,36 @@
+// ============================================================================
+// Report Only Conditional Access Policy Failures - Aggregated by Policy
+// ============================================================================
+// Zweck: 
+//   Aggregierte Ansicht der Report Only CA Policy Fehler pro Benutzer
+//   und CA-Regel, grouped ohne verwaltete Device
+//
+// Felder in Ergebnis:
+//   - CA-Regel (ConditionalAccessRule)
+//   - Anzahl Benutzer betroffen (UserCount)
+//   - Anzahl Fehler-Events (FailureCount)
+//   - Top 10 betroffene Benutzer (TopUsers)
+//
+// ============================================================================
+
+SignInLogs
+// Zeitraum: Letzte 30 Tage
+| where TimeGenerated > ago(30d)
+// Report Only Policies haben ReportSeverity = "Information"
+| where ReportSeverity == "Information"
+// CA-bezogene Fehler filtern
+| where Status.failureReason contains "Conditional Access" 
+    or ConditionalAccessStatus == "failure"
+    or ConditionalAccessResult contains "failure"
+// Unverwaltete Geräte: DeviceDetail.deviceId ist null/leer
+| where isempty(DeviceDetail.deviceId)
+// Aggregation
+| summarize
+    FailureCount = count(),
+    UniqueUsers = dcount(UserPrincipalName),
+    TopUsers = make_set(UserPrincipalName, 10),
+    FirstFailure = min(TimeGenerated),
+    LastFailure = max(TimeGenerated)
+    by ConditionalAccessRule, ConditionalAccessStatus
+// Sortierung nach Häufigkeit
+| order by FailureCount desc

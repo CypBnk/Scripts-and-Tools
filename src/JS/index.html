@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teams Audio Command Helper</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="card" aria-labelledby="title">
+        <div class="card-header">
+          <h1 id="title">Microsoft Teams Audio QuickFix Helper</h1>
+        </div>
+
+        <section class="lang-block" aria-labelledby="title-de">
+          <h2 id="title-de" class="lang-title">Deutsch</h2>
+          <p class="intro">
+            Diese Seite hilft Ihnen, schnell einen Befehl auszufuhren, um die
+            Audiofunktion in Microsoft Teams neu zu laden.
+          </p>
+
+          <ol class="steps">
+            <li>Klicken Sie auf <strong>Befehl kopieren</strong></li>
+            <li>
+              Offnen Sie <strong>PowerShell</strong> als aktueller Benutzer
+            </li>
+            <li>
+              Fugen Sie den Befehl ein und drucken Sie <strong>Enter</strong>
+            </li>
+          </ol>
+
+          <section class="command-panel" aria-labelledby="command-label-de">
+            <div class="command-header">
+              <h2 id="command-label-de">Diesen Befehl ausfuhren</h2>
+              <button class="copy-btn" type="button">Befehl kopieren</button>
+            </div>
+
+            <pre class="command-text" tabindex="0">
+Get-Process -Name "ms-teams","Teams" -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Process "ms-settings:sound"</pre
+            >
+            <p class="copy-status" role="status" aria-live="polite"></p>
+          </section>
+        </section>
+
+        <p class="section-label" aria-label="English section">English</p>
+
+        <p class="intro">
+          This page helps you quickly run one command for common Microsoft Teams
+          audio refresh needs.
+        </p>
+
+        <ol class="steps">
+          <li>Click <strong>Copy Command</strong></li>
+          <li>Open <strong>PowerShell</strong> as your current user</li>
+          <li>Paste the command and press <strong>Enter</strong></li>
+        </ol>
+
+        <section class="command-panel" aria-labelledby="command-label">
+          <div class="command-header">
+            <h2 id="command-label">Run This Command</h2>
+            <button class="copy-btn" type="button">Copy Command</button>
+          </div>
+
+          <pre class="command-text" tabindex="0">
+Get-Process -Name "ms-teams","Teams" -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Process "ms-settings:sound"</pre
+          >
+          <p class="copy-status" role="status" aria-live="polite"></p>
+        </section>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>

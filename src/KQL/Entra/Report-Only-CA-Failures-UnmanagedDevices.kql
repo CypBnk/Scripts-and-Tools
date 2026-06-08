@@ -1,0 +1,51 @@
+// ============================================================================
+// Report Only Conditional Access Policy Failures - Unmanaged Devices
+// ============================================================================
+// Zweck: 
+//   Zeigt alle Benutzer, deren Sign-in fehlgeschlagen ist wegen einer
+//   Report Only Conditional Access Policy, welche KEINE verwaltete 
+//   Windows Device haben (DeviceDetail ist null/leer)
+//
+// Felder in Ergebnis:
+//   - UPN (UserPrincipalName)
+//   - CA-Regel (ConditionalAccessRule)
+//   - IP-Adresse (IPAddress)
+//   - Geolocation/Named Location (City, CountryOrRegion)
+//   - Timestamp (TimeGenerated)
+//   - CorrelationID (CorrelationId)
+//
+// Filter:
+//   - Zeitraum: Letzte 30 Tage
+//   - ReportSeverity = "Information" (kennzeichnet Report Only Policies)
+//   - Status muss CA-Fehler enthalten
+//   - DeviceDetail.deviceId muss null/leer sein (unverwaltetes Gerät)
+//
+// ============================================================================
+
+SignInLogs
+// Zeitraum: Letzte 30 Tage
+| where TimeGenerated > ago(30d)
+// Report Only Policies haben ReportSeverity = "Information"
+| where ReportSeverity == "Information"
+// CA-bezogene Fehler filtern
+| where Status.failureReason contains "Conditional Access" 
+    or ConditionalAccessStatus == "failure"
+    or ConditionalAccessResult contains "failure"
+// Unverwaltete Geräte: DeviceDetail.deviceId ist null/leer
+| where isempty(DeviceDetail.deviceId)
+// Erforderliche Spalten projektieren und umbenennen
+| project
+    UPN = UserPrincipalName,
+    CARule = ConditionalAccessRule,
+    CAStatus = ConditionalAccessStatus,
+    CAResult = ConditionalAccessResult,
+    IPAddress,
+    City = LocationDetails.city,
+    Country = LocationDetails.countryOrRegion,
+    FailureReason = Status.failureReason,
+    Timestamp = TimeGenerated,
+    CorrelationID = CorrelationId,
+    AppDisplayName,
+    ResourceDisplayName
+// Sortierung nach Timestamp (neueste zuerst)
+| order by Timestamp desc
