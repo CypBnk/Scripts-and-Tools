@@ -1,0 +1,57 @@
+// Find inactive Guest Accounts across interactive and non-interactive sign-ins.
+// Includes guests with no sign-ins in the lookback period (or ever, when IdentityInfo is available).
+let InactivityDays = 90;  // Threshold for inactivity.
+let LookbackDays = 180;   // How far back to evaluate sign-in activity.
+let LookbackStart = ago(LookbackDays * 1d);
+let GuestAccounts =
+    union isfuzzy=true
+        (
+            IdentityInfo
+            | where AccountType =~ "Guest" or UserType =~ "Guest"
+            | summarize arg_max(TimeGenerated, *) by AccountObjectId
+            | project UserId = tostring(AccountObjectId), UserPrincipalName = tostring(AccountUPN), UserDisplayName = tostring(AccountDisplayName)
+        ),
+        (
+            SigninLogs
+            | where UserType =~ "Guest"
+            | summarize by UserId, UserPrincipalName, UserDisplayName
+        ),
+        (
+            AADNonInteractiveUserSignInLogs
+            | where UserType =~ "Guest"
+            | summarize by UserId, UserPrincipalName, UserDisplayName
+        )
+    | where isnotempty(UserId) or isnotempty(UserPrincipalName)
+    | extend GuestKey = tolower(coalesce(UserId, UserPrincipalName))
+    | summarize UserId = any(UserId), UserPrincipalName = any(UserPrincipalName), UserDisplayName = any(UserDisplayName) by GuestKey;
+let SignInActivity =
+    union isfuzzy=true
+        (
+            SigninLogs
+            | where CreatedDateTime >= LookbackStart
+            | where UserType =~ "Guest"
+            | project UserId, UserPrincipalName, UserDisplayName, SignInTime = CreatedDateTime, SignInType = "Interactive"
+        ),
+        (
+            AADNonInteractiveUserSignInLogs
+            | where CreatedDateTime >= LookbackStart
+            | where UserType =~ "Guest"
+            | project UserId, UserPrincipalName, UserDisplayName, SignInTime = CreatedDateTime, SignInType = "NonInteractive"
+        )
+    | where isnotempty(UserId) or isnotempty(UserPrincipalName)
+    | extend GuestKey = tolower(coalesce(UserId, UserPrincipalName))
+    | summarize
+        LastSigninTime = max(SignInTime),
+        InteractiveCount = countif(SignInType == "Interactive"),
+        NonInteractiveCount = countif(SignInType == "NonInteractive")
+     by GuestKey;
+GuestAccounts
+| join kind=leftouter SignInActivity on GuestKey
+| where isnull(LastSigninTime) or LastSigninTime < ago(InactivityDays * 1d)
+| extend
+    DaysSinceLastSignin = iff(isnull(LastSigninTime), long(null), datetime_diff('day', now(), LastSigninTime)),
+    InteractiveCount = coalesce(InteractiveCount, 0),
+    NonInteractiveCount = coalesce(NonInteractiveCount, 0),
+    Status = iff(isnull(LastSigninTime), "No sign-ins", "Inactive")
+| project UserPrincipalName, UserId, UserDisplayName, LastSigninTime, DaysSinceLastSignin, InteractiveCount, NonInteractiveCount, Status
+| order by Status desc, DaysSinceLastSignin desc nulls last
