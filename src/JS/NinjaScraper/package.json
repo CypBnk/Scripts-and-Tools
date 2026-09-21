@@ -1,0 +1,14 @@
+{
+    "name": "ninja-scraper",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Download run.events session material files from a JSON export or live API.",
+    "type": "module",
+    "engines": {
+        "node": ">=22"
+    },
+    "scripts": {
+        "start": "node cli.mjs",
+        "test": "node --test cli.test.mjs"
+    }
+}
