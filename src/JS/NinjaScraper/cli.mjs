@@ -386,7 +386,12 @@ if (
   import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
 ) {
   main().catch((error) => {
-    console.error(`Error: ${error.message}`);
+    const cause = error.cause;
+    const causeDetails =
+      cause instanceof Error
+        ? `\nCause: ${cause.name}: ${cause.message}${cause.code ? ` (${cause.code})` : ""}`
+        : "";
+    console.error(`Error: ${error.message}${causeDetails}`);
     process.exitCode = 1;
   });
 }
